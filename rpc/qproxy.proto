@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package qproxy;
+
+service QProxy {
+  rpc ListQueues (ListQueuesRequest) returns (stream ListQueuesResponse) {}
+  rpc CreateQueue (CreateQueueRequest) returns (CreateQueueResponse) {}
+  rpc ModifyQueue (ModifyQueueRequest) returns (ModifyQueueResponse) {}
+  rpc PurgeQueue (PurgeQueueRequest) returns (PurgeQueueResponse) {}
+  rpc AckMessages (AckMessagesRequest) returns (AckMessagesResponse) {}
+  rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse) {}
+  rpc PublishMessages (PublishMessagesRequest) returns (PublishMessagesResponse) {}
+  rpc ModifyAckDeadline (ModifyAckDeadlineRequest) returns (ModifyAckDeadlineResponse) {} 
+}
+
+message QueueId {
+  string Namespace = 1;
+  string Name = 2;
+}
+
+message ListQueuesRequest {
+  string Namespace = 1;
+  string Filter = 2;
+}
+
+message ListQueuesResponse {
+  repeated QueueId queues = 1;
+}
+
+message CreateQueueRequest {
+  QueueId Id = 1;
+}
+
+message CreateQueueResponse {
+}
+
+message ModifyQueueRequest {
+  QueueId Id = 1;
+  int64 MessageRetentionPeriod =2;
+  int64 AckDeadline = 3;
+}
+
+message ModifyQueueResponse {
+}
+
+message PurgeQueueRequest {
+  QueueId Id = 1;
+}
+
+message PurgeQueueResponse {
+}
+
+message MessageReceipt {
+  QueueId QueueId = 1;
+  string Id = 2;
+}
+
+message Message {
+  QueueId QueueId = 1;
+  string Data = 2;
+  map<string, string> Attributes = 3;  
+}
+
+message AckMessagesRequest {
+  repeated MessageReceipts MessageReceipts = 1;
+}
+
+message AckMessagesResponse {
+  repeated MessageReceipts Failed = 1;
+}
+
+message GetMessagesRequest {
+  QueueId QueueId = 1;
+  int64 LongPollSeconds = 2;
+  int32 MaxMessages = 3;
+}
+
+message GetMessagesResponse {
+  repeated Message Messages = 1;
+}
+
+message PublishMessagesRequest {
+  repeated Message Messages = 1;
+}
+
+message PublishMessagesResponse {
+  repeated Message Failed = 1;
+}
+
+message ModifyAckDeadlineRequest {
+  MessageReceipt Receipt = 1;
+  int32 DeadlineSeconds = 2;
+}
+
