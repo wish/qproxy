@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+package rpc;
+
+service QProxy {
+  rpc ListQueues (ListQueuesRequest) returns (stream ListQueuesResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/listqueues"
+        body: "*"
+    };
+  }
+  rpc CreateQueue (CreateQueueRequest) returns (CreateQueueResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/createqueue"
+        body: "*"
+    };
+}
+  rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/deletequeue"
+        body: "*"
+    };
+}
+  rpc ModifyQueue (ModifyQueueRequest) returns (ModifyQueueResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/modifyqueue"
+        body: "*"
+    };
+}
+  rpc PurgeQueue (PurgeQueueRequest) returns (PurgeQueueResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/purgequeue"
+        body: "*"
+    };
+}
+  rpc AckMessages (AckMessagesRequest) returns (AckMessagesResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/ackmessages"
+        body: "*"
+    };
+}
+  rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/getmessages"
+        body: "*"
+    };
+}
+  rpc PublishMessages (PublishMessagesRequest) returns (PublishMessagesResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/publishmessages"
+        body: "*"
+    };
+}
+  rpc ModifyAckDeadline (ModifyAckDeadlineRequest) returns (ModifyAckDeadlineResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/modifyackdeadline"
+        body: "*"
+    };
+} 
+  rpc Healthcheck (HealthcheckRequest) returns (HealthcheckResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/healthcheck"
+        body: "*"
+    };
+} 
+}
+
+message QueueId {
+  string Namespace = 1;
+  string Name = 2;
+}
+
+message ListQueuesRequest {
+  string Namespace = 1;
+  string Filter = 2;
+}
+
+message ListQueuesResponse {
+  repeated QueueId queues = 1;
+}
+
+message CreateQueueRequest {
+  QueueId Id = 1;
+  map<string, string> Attributes = 2;
+}
+
+message CreateQueueResponse {
+}
+
+message DeleteQueueRequest {
+  QueueId Id = 1;
+}
+
+message DeleteQueueResponse {
+}
+
+message ModifyQueueRequest {
+  QueueId Id = 1;
+  map<string, string> Attributes = 2;
+}
+
+message ModifyQueueResponse {
+}
+
+message PurgeQueueRequest {
+  QueueId Id = 1;
+}
+
+message PurgeQueueResponse {
+}
+
+message MessageReceipt {
+  string Id = 1;
+  string ErrorMessage = 2;
+}
+
+message FailedPublish {
+  int64 Index = 1;
+  string ErrorMessage = 2;
+}
+
+message Message {
+  string Data = 1;
+  map<string, string> Attributes = 2;  
+
+  MessageReceipt Receipt = 100;
+}
+
+message AckMessagesRequest {
+  QueueId QueueId = 1;
+  repeated MessageReceipt Receipts = 2;
+}
+
+message AckMessagesResponse {
+  // Return the receipts that failed to ack
+  repeated MessageReceipt Failed = 1;
+}
+
+message GetMessagesRequest {
+  QueueId QueueId = 1;
+  // How long to poll for up to MaxMessages messages. 0 implies return immediately
+  int64 LongPollSeconds = 2;
+  int64 MaxMessages = 3;
+  int64 AckDeadlineSeconds = 4;
+}
+
+message GetMessagesResponse {
+  repeated Message Messages = 1;
+}
+
+message PublishMessagesRequest {
+  QueueId QueueId = 1;
+  repeated Message Messages = 2;
+}
+
+message PublishMessagesResponse {
+  // Return the indexes of the messages that failed to send
+  repeated FailedPublish Failed = 1;
+}
+
+message ModifyAckDeadlineRequest {
+  QueueId QueueId = 1;
+  MessageReceipt Receipt = 2;
+  int64 AckDeadlineSeconds = 3;
+}
+
+message ModifyAckDeadlineResponse {
+}
+
+message HealthcheckRequest {
+}
+
+message HealthcheckResponse{
+}
