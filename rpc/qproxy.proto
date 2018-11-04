@@ -1,10 +1,11 @@
 syntax = "proto3";
 
-package qproxy;
+package rpc;
 
 service QProxy {
   rpc ListQueues (ListQueuesRequest) returns (stream ListQueuesResponse) {}
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueResponse) {}
+  rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueResponse) {}
   rpc ModifyQueue (ModifyQueueRequest) returns (ModifyQueueResponse) {}
   rpc PurgeQueue (PurgeQueueRequest) returns (PurgeQueueResponse) {}
   rpc AckMessages (AckMessagesRequest) returns (AckMessagesResponse) {}
@@ -29,15 +30,22 @@ message ListQueuesResponse {
 
 message CreateQueueRequest {
   QueueId Id = 1;
+  map<string, string> Attributes = 2;
 }
 
 message CreateQueueResponse {
 }
 
+message DeleteQueueRequest {
+  QueueId Id = 1;
+}
+
+message DeleteQueueResponse {
+}
+
 message ModifyQueueRequest {
   QueueId Id = 1;
-  int64 MessageRetentionPeriod =2;
-  int64 AckDeadline = 3;
+  map<string, string> Attributes = 2;
 }
 
 message ModifyQueueResponse {
@@ -51,28 +59,38 @@ message PurgeQueueResponse {
 }
 
 message MessageReceipt {
-  QueueId QueueId = 1;
-  string Id = 2;
+  string Id = 1;
+  string ErrorMessage = 2;
+}
+
+message FailedPublish {
+  int64 Index = 1;
+  string ErrormEssage = 2;
 }
 
 message Message {
-  QueueId QueueId = 1;
-  string Data = 2;
-  map<string, string> Attributes = 3;  
+  string Data = 1;
+  map<string, string> Attributes = 2;  
+
+  MessageReceipt receipt = 100;
 }
 
 message AckMessagesRequest {
-  repeated MessageReceipts MessageReceipts = 1;
+  QueueId QueueId = 1;
+  repeated MessageReceipt MessageReceipts = 2;
 }
 
 message AckMessagesResponse {
-  repeated MessageReceipts Failed = 1;
+  // Return the receipts that failed to ack
+  repeated MessageReceipt Failed = 1;
 }
 
 message GetMessagesRequest {
   QueueId QueueId = 1;
+  // How long to poll for up to MaxMessages messages. 0 implies return immediately
   int64 LongPollSeconds = 2;
-  int32 MaxMessages = 3;
+  int64 MaxMessages = 3;
+  int64 AckDeadlineSeconds = 4;
 }
 
 message GetMessagesResponse {
@@ -80,15 +98,20 @@ message GetMessagesResponse {
 }
 
 message PublishMessagesRequest {
-  repeated Message Messages = 1;
+  QueueId QueueId = 1;
+  repeated Message Messages = 2;
 }
 
 message PublishMessagesResponse {
-  repeated Message Failed = 1;
+  // Return the indexes of the messages that failed to send
+  repeated FailedPublish Failed = 1;
 }
 
 message ModifyAckDeadlineRequest {
   MessageReceipt Receipt = 1;
-  int32 DeadlineSeconds = 2;
+  int32 AckDeadlineSeconds = 2;
+}
+
+message ModifyAckDeadlineResponse {
 }
 
