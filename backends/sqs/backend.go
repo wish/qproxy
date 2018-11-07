@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/aws/service/sqs"
-	"github.com/kahuang/QProxy/rpc"
+	"github.com/kahuang/qproxy/rpc"
 	"sync"
 )
 

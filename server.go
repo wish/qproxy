@@ -2,8 +2,8 @@ package qproxy
 
 import (
 	"github.com/jacksontj/dataman/metrics"
-	"github.com/kahuang/QProxy/backend/sqs"
-	"github.com/kahuang/QProxy/rpc"
+	"github.com/kahuang/qproxy/backend/sqs"
+	"github.com/kahuang/qproxy/rpc"
 )
 
 type QProxyServer struct {

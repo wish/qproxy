@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/kahuang/QProxy/rpc"
+	"github.com/kahuang/qproxy/rpc"
 )
 
 // AddRoutes matches a mux with handlers
