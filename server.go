@@ -1,8 +1,12 @@
 package qproxy
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/jacksontj/dataman/metrics"
-	"github.com/kahuang/qproxy/backend/sqs"
+	"github.com/kahuang/qproxy/backends/sqs"
 	"github.com/kahuang/qproxy/rpc"
 )
 

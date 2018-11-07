@@ -1,10 +1,17 @@
 package sqs
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/kahuang/qproxy/rpc"
+)
+
 const sepChar = "_"
 const forwardSlash = "/"
 
-func QueueIdToName(id *rpc.QueueId) string {
-	return strings.Join([]string{id.Namespace, id.Name}, sepChar)
+func QueueIdToName(id *rpc.QueueId) *string {
+	return &strings.Join([]string{id.Namespace, id.Name}, sepChar)
 }
 
 func QueueUrlToQueueId(url string) (*rpc.QueueId, error) {

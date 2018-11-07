@@ -1,11 +1,13 @@
 package sqs
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
-	"github.com/aws/aws-sdk-go-v2/aws/service/sqs"
-	"github.com/kahuang/qproxy/rpc"
+	"context"
+	"strings"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/kahuang/qproxy/rpc"
 )
 
 type Backend struct {
@@ -13,7 +15,7 @@ type Backend struct {
 	sqs         *sqs.SQS
 }
 
-func New(region string) (*SQS, error) {
+func New(region string) (*Backend, error) {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return nil, err
@@ -23,7 +25,7 @@ func New(region string) (*SQS, error) {
 	svc := sqs.New(cfg)
 
 	return &Backend{
-		nameMapping: make(map[rpc.QueueId]string),
+		nameMapping: &sync.Map{},
 		sqs:         svc,
 	}, nil
 }
@@ -46,19 +48,19 @@ func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, err
 
 	resp, err := req.Send()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	s.nameMapping.Store(rpc.QueueId{
 		Namespace: in.Namespace,
 		Name:      in.Name,
-	}, resp.QueueUrl)
-	return resp.QueueUrl, nil
+	}, *resp.QueueUrl)
+	return *resp.QueueUrl, nil
 }
 
 func (s *Backend) ListQueues(ctx context.Context, in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQueuesServer) (err error) {
-	req = s.sqs.ListQueueRequest(&sqs.ListQueuesInput{
-		QueueNamePrefix: in.Id.Namespace,
+	req := s.sqs.ListQueuesRequest(&sqs.ListQueuesInput{
+		QueueNamePrefix: &in.Namespace,
 	})
 
 	req.SetContext(ctx)
@@ -66,23 +68,23 @@ func (s *Backend) ListQueues(ctx context.Context, in *rpc.ListQueuesRequest, str
 	// TODO: The ListQueues API has a 1000 object return limit, and no paging functionality
 	// so we'll either need to do some extra work here to get _all_ results or add
 	// a field to the response indicating that it was truncated
-	resp, err = req.Send()
+	resp, err := req.Send()
 	if err != nil {
 		return err
 	}
 
-	buf := make([]*QueueId, 0, 100)
+	buf := make([]*rpc.QueueId, 0, 100)
 	for idx, url := range resp.QueueUrls {
 		if idx != 0 && idx%100 == 0 {
 			stream.Send(&rpc.ListQueuesResponse{
 				Queues: buf,
 			})
-			buf = make([]*QueueId, 0, 100)
+			buf = make([]*rpc.QueueId, 0, 100)
 		}
 
 		if queueId, err := QueueUrlToQueueId(url); err != nil {
 			return err
-		} else if strings.Contains(queueId, in.Filter) {
+		} else if strings.Contains(queueId.Name, in.Filter) {
 			buf = append(buf, queueId)
 		}
 	}
@@ -94,21 +96,21 @@ func (s *Backend) ListQueues(ctx context.Context, in *rpc.ListQueuesRequest, str
 	// Send a terminating trailer chunk if we haven't already
 	if len(buf) > 0 {
 		stream.Send(&rpc.ListQueuesResponse{
-			Queues: []*QueueId{},
+			Queues: []*rpc.QueueId{},
 		})
 	}
 	return nil
 }
 
 func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (resp *rpc.CreateQueueResponse, err error) {
-	req = s.sqs.CreateQueueRequest(&sqs.CreateQueueInput{
+	req := s.sqs.CreateQueueRequest(&sqs.CreateQueueInput{
 		QueueName:  QueueIdToName(in.Id),
 		Attributes: in.Attributes,
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -117,13 +119,13 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 }
 
 func (s *Backend) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest) (resp *rpc.DeleteQueueResponse, err error) {
-	req = s.sqs.DeleteQueueRequest(&sqs.DeleteQueueInput{
+	req := s.sqs.DeleteQueueRequest(&sqs.DeleteQueueInput{
 		QueueName: QueueIdToName(in.Id),
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -132,14 +134,14 @@ func (s *Backend) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest) (
 }
 
 func (s *Backend) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest) (resp *rpc.ModifyQueueResponse, err error) {
-	req = s.sqs.SetQueueAttributesRequest(&sqs.SetQueueAttributesInput{
+	req := s.sqs.SetQueueAttributesRequest(&sqs.SetQueueAttributesInput{
 		QueueName:  QueueIdToName(in.Id),
 		Attributes: in.Attributes,
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -148,13 +150,13 @@ func (s *Backend) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest) (
 }
 
 func (s *Backend) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest) (resp *rpc.PurgeQueueResponse, err error) {
-	req = s.sqs.PurgeQueueRequest(&sqs.PurgeQueueInput{
+	req := s.sqs.PurgeQueueRequest(&sqs.PurgeQueueInput{
 		QueueName: QueueIdToName(in.Id),
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +178,14 @@ func (s *Backend) AckMessages(ctx context.Context, in *rpc.AckMessagesRequest) (
 		})
 	}
 
-	req = s.sqs.DeleteMessageBatchRequest(&sqs.DeleteMessageBatchInput{
+	req := s.sqs.DeleteMessageBatchRequest(&sqs.DeleteMessageBatchInput{
 		QueueUrl: url,
 		Entries:  entries,
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +205,7 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 		return nil, err
 	}
 
-	req = s.sqs.ReceiveMessageRequest(&ReceiveMessageInput{
+	req := s.sqs.ReceiveMessageRequest(&ReceiveMessageInput{
 		MessageAttributeNames: []string{"All"},
 		QueueUrl:              url,
 		WaitTimeSeconds:       in.LongPollSeconds,
@@ -213,7 +215,7 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 
 	req.SetContext(ctx)
 
-	resp, err := req.Send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -251,14 +253,14 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 		})
 	}
 
-	req = s.sqs.SendMessageBatchRequest(&sqs.SendMessageBatchInput{
+	req := s.sqs.SendMessageBatchRequest(&sqs.SendMessageBatchInput{
 		QueueUrl: url,
 		Entries:  entries,
 	})
 
 	req.SetContext(ctx)
 
-	resp, err := req.send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +281,7 @@ func (s *Backend) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckDeadli
 		return nil, err
 	}
 
-	req = s.sqs.ChangeMessageVisiblityRequest(&ChangeMessageVisibilityInput{
+	req := s.sqs.ChangeMessageVisiblityRequest(&ChangeMessageVisibilityInput{
 		QueueUrl:          url,
 		ReceiptHandle:     in.Receipt.Id,
 		VisibilityTimeout: in.AckDeadlineSeconds,
@@ -287,7 +289,7 @@ func (s *Backend) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckDeadli
 
 	req.SetContext(ctx)
 
-	resp, err := req.Send()
+	resp, err = req.Send()
 	if err != nil {
 		return nil, err
 	}
