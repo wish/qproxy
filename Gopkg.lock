@@ -20,6 +20,24 @@
   version = "v2.1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/favadi/protoc-go-inject-tag"
+  packages = ["."]
+  revision = "c2c1884c833d0ed0ed0d6c6c899aaa75d99ee38f"
+
+[[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/glog"
+  packages = ["."]
+  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["jsonpb","proto","protoc-gen-go/descriptor","ptypes","ptypes/any","ptypes/duration","ptypes/struct","ptypes/timestamp"]
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
@@ -63,7 +81,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/pquerna/ffjson"
-  packages = ["fflib/v1","fflib/v1/internal"]
+  packages = [".","fflib/v1","fflib/v1/internal","generator","inception","shared"]
   revision = "e517b90714f7c0eabe6d2e570a5886ae077d6db6"
 
 [[projects]]
@@ -101,9 +119,15 @@
   revision = "2e463a05d100327ca47ac218281906921038fd95"
   version = "v1.16.0"
 
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8304e9f62ad7a1546bfa0898f4e54cc1f94d344c27bb4bfc9721ae09a5e5dde6"
+  inputs-digest = "1a12ef712b8da6a531fcdbb58bad433bd514f5a17baada07f9fb9a5e67e2a3a9"
   solver-name = "gps-cdcl"
   solver-version = 1
