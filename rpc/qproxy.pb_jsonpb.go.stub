@@ -95,3 +95,13 @@ func (j *ModifyAckDeadlineResponse) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []b
 	return j.UnmarshalJSON(b)
 }
 
+func (j *HealthcheckRequest) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error) { return j.MarshalJSON() }
+func (j *HealthcheckRequest) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
+	return j.UnmarshalJSON(b)
+}
+
+func (j *HealthcheckResponse) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error) { return j.MarshalJSON() }
+func (j *HealthcheckResponse) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
+	return j.UnmarshalJSON(b)
+}
+
