@@ -9,7 +9,7 @@ import (
 	"github.com/jacksontj/dataman/metrics/promhandler"
 	"github.com/pkg/errors"
 
-	"github.com/kahuang/qproxy/rpc"
+	"github.com/wish/qproxy/rpc"
 )
 
 // AddRoutes matches a mux with handlers

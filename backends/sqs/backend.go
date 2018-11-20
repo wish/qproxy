@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/kahuang/qproxy/rpc"
+	"github.com/wish/qproxy/rpc"
 )
 
 type Backend struct {

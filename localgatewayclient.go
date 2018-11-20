@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/kahuang/qproxy/rpc"
+	"github.com/wish/qproxy/rpc"
 )
 
 type QProxyDirectClient struct{ s *QProxyServer }

@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/kahuang/qproxy"
-	"github.com/kahuang/qproxy/rpc"
+	"github.com/wish/qproxy"
+	"github.com/wish/qproxy/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kahuang/qproxy/rpc"
+	"github.com/wish/qproxy/rpc"
 )
 
 const sepChar = "_"

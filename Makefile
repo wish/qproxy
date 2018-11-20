@@ -18,16 +18,16 @@ default: \
 build/qproxy.linux: vendor ${GOFILES}
 	@echo "$@"
 	@GOOS=linux CGO_ENABLED=0 go build -o build/qproxy.linux -ldflags\
-		"-X github.com/kahuang/qproxy.Version=$(VERSION)$(V_DIRTY) \
-		 -X github.com/kahuang/qproxy.Git=$(GIT)$(DIRTY)" \
-		github.com/kahuang/qproxy/cmd/qproxy
+		"-X github.com/wish/qproxy.Version=$(VERSION)$(V_DIRTY) \
+		 -X github.com/wish/qproxy.Git=$(GIT)$(DIRTY)" \
+		github.com/wish/qproxy/cmd/qproxy
 
 build/qproxy.darwin: vendor ${GOFILES}
 	@echo "$@"
 	@GOOS=darwin CGO_ENABLED=0 go build -o build/qproxy.darwin -ldflags\
-		"-X github.com/kahuang/qproxy.Version=$(VERSION)$(V_DIRTY) \
-		 -X github.com/kahuang/qproxy.Git=$(GIT)$(DIRTY)" \
-		github.com/kahuang/qproxy/cmd/qproxy
+		"-X github.com/wish/qproxy.Version=$(VERSION)$(V_DIRTY) \
+		 -X github.com/wish/qproxy.Git=$(GIT)$(DIRTY)" \
+		github.com/wish/qproxy/cmd/qproxy
 
 # all .go files are deps, so these are fine specified as such:
 rpc/qproxy.pb.go: ${PGG} ${PGIT} rpc/qproxy.proto
@@ -60,7 +60,7 @@ vendor: Gopkg.toml Gopkg.lock
 
 .PHONY: coverage
 coverage:
-	@go test -coverprofile=/tmp/cover github.com/kahuang/qproxy
+	@go test -coverprofile=/tmp/cover github.com/wish/qproxy
 	@go tool cover -html=/tmp/cover -o coverage.html
 	@rm /tmp/cover
 
