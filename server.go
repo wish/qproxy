@@ -58,6 +58,18 @@ func (s *QProxyServer) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_L
 	return s.backend.ListQueues(in, stream)
 }
 
+func (s *QProxyServer) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (resp *rpc.GetQueueResponse, err error) {
+	start := time.Now()
+	s.m.APIHits.WithValues("GetQueue", in.Id.Namespace, in.Id.Name).Inc(1)
+	defer func() {
+		s.m.APILatency.WithValues("GetQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
+		if err != nil {
+			s.m.APIErrors.WithValues("GetQueue", in.Id.Namespace, in.Id.Name).Inc(1)
+		}
+	}()
+	return s.backend.GetQueue(ctx, in)
+}
+
 func (s *QProxyServer) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (resp *rpc.CreateQueueResponse, err error) {
 	start := time.Now()
 	s.m.APIHits.WithValues("CreateQueue", in.Id.Namespace, in.Id.Name).Inc(1)

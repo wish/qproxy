@@ -30,9 +30,15 @@ func (m *QProxyDirectClient) ListQueues(ctx context.Context, in *rpc.ListQueuesR
 
 	return client, nil
 }
+
+func (m *QProxyDirectClient) GetQueue(ctx context.Context, in *rpc.GetQueueRequest, opts ...grpc.CallOption) (*rpc.GetQueueResponse, error) {
+	return m.s.GetQueue(ctx, in)
+}
+
 func (m *QProxyDirectClient) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest, opts ...grpc.CallOption) (*rpc.CreateQueueResponse, error) {
 	return m.s.CreateQueue(ctx, in)
 }
+
 func (m *QProxyDirectClient) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest, opts ...grpc.CallOption) (*rpc.DeleteQueueResponse, error) {
 	return m.s.DeleteQueue(ctx, in)
 }

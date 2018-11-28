@@ -112,14 +112,31 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 	return nil
 }
 
-func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (*rpc.CreateQueueResponse, error) {
+func (s *Backend) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (*rpc.GetQueueResponse, error) {
 	url, err := s.GetQueueUrl(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
 
+	req := s.sqs.GetQueueAttributesRequest(&sqs.GetQueueAttributesInput{
+		QueueUrl:       &url,
+		AttributeNames: []sqs.QueueAttributeName{sqs.QueueAttributeNameAll},
+	})
+
+	req.SetContext(ctx)
+
+	resp, err := req.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetQueueResponse{Attributes: resp.Attributes}, nil
+}
+
+func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (*rpc.CreateQueueResponse, error) {
+	queueName := QueueIdToName(in.Id)
 	req := s.sqs.CreateQueueRequest(&sqs.CreateQueueInput{
-		QueueName:  &url,
+		QueueName:  queueName,
 		Attributes: in.Attributes,
 	})
 

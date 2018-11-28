@@ -11,6 +11,12 @@ service QProxy {
         body: "*"
     };
   }
+  rpc GetQueue (GetQueueRequest) returns (GetQueueResponse) {
+    option (google.api.http) = {
+        post : "/v1/qproxy/getqueue"
+        body: "*"
+    };
+}
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueResponse) {
     option (google.api.http) = {
         post : "/v1/qproxy/createqueue"
@@ -79,6 +85,14 @@ message ListQueuesRequest {
 
 message ListQueuesResponse {
   repeated QueueId queues = 1;
+}
+
+message GetQueueRequest {
+  QueueId Id = 1;
+}
+
+message GetQueueResponse {
+  map<string, string> Attributes = 1;
 }
 
 message CreateQueueRequest {
