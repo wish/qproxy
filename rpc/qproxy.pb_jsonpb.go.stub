@@ -21,6 +21,14 @@ func (j *ListQueuesResponse) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) er
 	return j.UnmarshalJSON(b)
 }
 
+func (j *GetQueueRequest) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error) { return j.MarshalJSON() }
+func (j *GetQueueRequest) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
+	return j.UnmarshalJSON(b)
+}
+
+func (j *GetQueueResponse) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error)       { return j.MarshalJSON() }
+func (j *GetQueueResponse) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error { return j.UnmarshalJSON(b) }
+
 func (j *CreateQueueRequest) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error) { return j.MarshalJSON() }
 func (j *CreateQueueRequest) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
 	return j.UnmarshalJSON(b)
@@ -37,7 +45,6 @@ func (j *ModifyQueueRequest) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) er
 
 func (j *PurgeQueueRequest) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error)       { return j.MarshalJSON() }
 func (j *PurgeQueueRequest) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error { return j.UnmarshalJSON(b) }
-
 
 func (j *MessageReceipt) MarshalJSONPB(*jsonpb.Marshaler) ([]byte, error) { return j.MarshalJSON() }
 func (j *MessageReceipt) UnmarshalJSONPB(_ *jsonpb.Unmarshaler, b []byte) error {
