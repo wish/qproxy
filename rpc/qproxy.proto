@@ -84,7 +84,7 @@ message ListQueuesRequest {
 }
 
 message ListQueuesResponse {
-  repeated QueueId queues = 1;
+  repeated QueueId Queues = 1;
 }
 
 message GetQueueRequest {
