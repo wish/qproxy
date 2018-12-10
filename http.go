@@ -9,12 +9,13 @@ import (
 	"github.com/jacksontj/dataman/metrics/promhandler"
 	"github.com/pkg/errors"
 
+	"github.com/wish/qproxy/gateway"
 	"github.com/wish/qproxy/rpc"
 )
 
 // AddRoutes matches a mux with handlers
 func AddRoutes(mux *http.ServeMux, server *QProxyServer) error {
-	localClient := &QProxyDirectClient{server}
+	localClient := &gateway.QProxyDirectClient{server}
 	gwmux := grpcgw_runtime.NewServeMux()
 
 	if err := rpc.RegisterQProxyHandlerClient(context.Background(), gwmux, localClient); err != nil {

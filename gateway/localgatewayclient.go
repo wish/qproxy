@@ -1,4 +1,4 @@
-package qproxy
+package gateway
 
 import (
 	"io"
@@ -11,7 +11,7 @@ import (
 	"github.com/wish/qproxy/rpc"
 )
 
-type QProxyDirectClient struct{ s *QProxyServer }
+type QProxyDirectClient struct{ S rpc.QProxyServer }
 
 func (m *QProxyDirectClient) ListQueues(ctx context.Context, in *rpc.ListQueuesRequest, opts ...grpc.CallOption) (rpc.QProxy_ListQueuesClient, error) {
 	// TODO: buffer response channel?
@@ -23,7 +23,7 @@ func (m *QProxyDirectClient) ListQueues(ctx context.Context, in *rpc.ListQueuesR
 
 	go func() {
 		defer close(c)
-		if err := m.s.ListQueues(in, server); err != nil {
+		if err := m.S.ListQueues(in, server); err != nil {
 			errChan <- err
 		}
 	}()
@@ -32,43 +32,43 @@ func (m *QProxyDirectClient) ListQueues(ctx context.Context, in *rpc.ListQueuesR
 }
 
 func (m *QProxyDirectClient) GetQueue(ctx context.Context, in *rpc.GetQueueRequest, opts ...grpc.CallOption) (*rpc.GetQueueResponse, error) {
-	return m.s.GetQueue(ctx, in)
+	return m.S.GetQueue(ctx, in)
 }
 
 func (m *QProxyDirectClient) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest, opts ...grpc.CallOption) (*rpc.CreateQueueResponse, error) {
-	return m.s.CreateQueue(ctx, in)
+	return m.S.CreateQueue(ctx, in)
 }
 
 func (m *QProxyDirectClient) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest, opts ...grpc.CallOption) (*rpc.DeleteQueueResponse, error) {
-	return m.s.DeleteQueue(ctx, in)
+	return m.S.DeleteQueue(ctx, in)
 }
 
 func (m *QProxyDirectClient) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest, opts ...grpc.CallOption) (*rpc.ModifyQueueResponse, error) {
-	return m.s.ModifyQueue(ctx, in)
+	return m.S.ModifyQueue(ctx, in)
 }
 
 func (m *QProxyDirectClient) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest, opts ...grpc.CallOption) (*rpc.PurgeQueueResponse, error) {
-	return m.s.PurgeQueue(ctx, in)
+	return m.S.PurgeQueue(ctx, in)
 }
 
 func (m *QProxyDirectClient) AckMessages(ctx context.Context, in *rpc.AckMessagesRequest, opts ...grpc.CallOption) (*rpc.AckMessagesResponse, error) {
-	return m.s.AckMessages(ctx, in)
+	return m.S.AckMessages(ctx, in)
 }
 func (m *QProxyDirectClient) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest, opts ...grpc.CallOption) (*rpc.GetMessagesResponse, error) {
-	return m.s.GetMessages(ctx, in)
+	return m.S.GetMessages(ctx, in)
 }
 
 func (m *QProxyDirectClient) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRequest, opts ...grpc.CallOption) (*rpc.PublishMessagesResponse, error) {
-	return m.s.PublishMessages(ctx, in)
+	return m.S.PublishMessages(ctx, in)
 }
 
 func (m *QProxyDirectClient) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckDeadlineRequest, opts ...grpc.CallOption) (*rpc.ModifyAckDeadlineResponse, error) {
-	return m.s.ModifyAckDeadline(ctx, in)
+	return m.S.ModifyAckDeadline(ctx, in)
 }
 
 // Control flow
 func (m *QProxyDirectClient) Healthcheck(ctx context.Context, in *rpc.HealthcheckRequest, opts ...grpc.CallOption) (*rpc.HealthcheckResponse, error) {
-	return m.s.Healthcheck(ctx, in)
+	return m.S.Healthcheck(ctx, in)
 }
 
 // ListQueues local stream client

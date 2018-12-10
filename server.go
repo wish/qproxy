@@ -7,6 +7,7 @@ import (
 
 	"github.com/jacksontj/dataman/metrics"
 	"github.com/wish/qproxy/backends/sqs"
+	qmetrics "github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
 )
 
@@ -14,12 +15,12 @@ type QProxyServer struct {
 	config          *Config
 	backend         rpc.QProxyServer
 	metricsRegistry metrics.Registry
-	m               QProxyMetrics
+	m               qmetrics.QProxyMetrics
 }
 
 func NewServer(config *Config) (*QProxyServer, error) {
 	registry := metrics.NewNamespaceRegistry("qproxy")
-	m, err := NewQProxyMetrics(registry)
+	m, err := qmetrics.NewQProxyMetrics(registry)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func NewServer(config *Config) (*QProxyServer, error) {
 
 	switch config.Backend {
 	case SQS:
-		backend, err := sqs.New(config.Region)
+		backend, err := sqs.New(config.Region, m, config.MetricsMode, config.MetricsNamespace)
 		if err != nil {
 			return nil, err
 		}

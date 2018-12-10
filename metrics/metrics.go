@@ -1,4 +1,4 @@
-package qproxy
+package metrics
 
 import (
 	"github.com/jacksontj/dataman/metrics"
@@ -12,6 +12,9 @@ type QProxyMetrics struct {
 	Acknowledged *metrics.CounterArray
 	Published    *metrics.CounterArray
 	Received     *metrics.CounterArray
+
+	Queued   *metrics.GaugeArray
+	Inflight *metrics.GaugeArray
 }
 
 func NewQProxyMetrics(r metrics.Registry) (QProxyMetrics, error) {
@@ -68,6 +71,24 @@ func NewQProxyMetrics(r metrics.Registry) (QProxyMetrics, error) {
 		[]string{"namespace", "name"},
 	)
 	if err := r.Register(m.Received); err != nil {
+		return m, err
+	}
+
+	m.Queued, _ = metrics.NewCustomGaugeArray(
+		metrics.Metric{Name: "queued"},
+		metrics.NewGauge,
+		[]string{"namespace", "name"},
+	)
+	if err := r.Register(m.Queued); err != nil {
+		return m, err
+	}
+
+	m.Inflight, _ = metrics.NewCustomGaugeArray(
+		metrics.Metric{Name: "inflight"},
+		metrics.NewGauge,
+		[]string{"namespace", "name"},
+	)
+	if err := r.Register(m.Inflight); err != nil {
 		return m, err
 	}
 

@@ -2,12 +2,16 @@ package sqs
 
 import (
 	"context"
+	"io"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/wish/qproxy/gateway"
+	"github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
 )
 
@@ -16,11 +20,12 @@ type Backend struct {
 	nameMapping *sync.Map
 	sqs         *sqs.SQS
 
+	m metrics.QProxyMetrics
 	// Perf optimization
 	stringType *string
 }
 
-func New(region string) (*Backend, error) {
+func New(region string, mets metrics.QProxyMetrics, metricsMode bool, metricsNamespace string) (*Backend, error) {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return nil, err
@@ -30,11 +35,89 @@ func New(region string) (*Backend, error) {
 	svc := sqs.New(cfg)
 
 	stringType := "String"
-	return &Backend{
+	backend := Backend{
 		nameMapping: &sync.Map{},
 		sqs:         svc,
+		m:           mets,
 		stringType:  &stringType,
-	}, nil
+	}
+
+	if metricsMode {
+		go backend.collectMetrics(metricsNamespace)
+	}
+	return &backend, nil
+}
+
+func (s *Backend) collectMetrics(metricsNamespace string) {
+	directClient := gateway.QProxyDirectClient{s}
+	queues := make([]*rpc.QueueId, 0)
+	collectTicker := time.NewTicker(15 * time.Second)
+	updateTicker := time.NewTicker(5 * time.Minute)
+
+	updateFunc := func() ([]*rpc.QueueId, error) {
+		newQueues := make([]*rpc.QueueId, 0, 1000)
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		respClient, err := directClient.ListQueues(ctx, &rpc.ListQueuesRequest{
+			Namespace: metricsNamespace,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for {
+			results, err := respClient.Recv()
+			if err == nil {
+				if results == nil {
+					break
+				}
+				newQueues = append(newQueues, results.Queues...)
+			} else {
+				if err == io.EOF {
+					return newQueues, nil
+				}
+				return nil, err
+			}
+		}
+		return newQueues, nil
+	}
+
+	collectFunc := func(id *rpc.QueueId, wg *sync.WaitGroup) {
+		wg.Add(1)
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+		attrs, err := s.GetQueue(ctx, &rpc.GetQueueRequest{Id: id})
+		if err == nil {
+			queued, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessages"], 10, 64)
+			if err == nil {
+				s.m.Queued.WithValues(id.Namespace, id.Name).Set(float64(queued))
+			}
+			inflight, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessagesNotVisible"], 10, 64)
+			if err == nil {
+				s.m.Inflight.WithValues(id.Namespace, id.Name).Set(float64(inflight))
+			}
+		}
+		wg.Done()
+	}
+
+	newQueues, err := updateFunc()
+	if err == nil {
+		queues = newQueues
+	}
+
+	for {
+		select {
+		case <-updateTicker.C:
+			newQueues, err := updateFunc()
+			// TOD: log if err
+			if err == nil {
+				queues = newQueues
+			}
+		case <-collectTicker.C:
+			wg := sync.WaitGroup{}
+			for _, queue := range queues {
+				go collectFunc(queue, &wg)
+			}
+			wg.Wait()
+		}
+	}
 }
 
 func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, error) {

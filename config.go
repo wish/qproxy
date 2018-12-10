@@ -12,8 +12,10 @@ const (
 )
 
 type Config struct {
-	Backend string `long:"backend" description:"Backend queueing system to use" required:"true"`
-	Region  string `long:"region" description:"Region to connect to (if applicable)"`
+	Backend          string `long:"backend" description:"Backend queueing system to use" required:"true"`
+	Region           string `long:"region" description:"Region to connect to (if applicable)"`
+	MetricsMode      bool   `long:"metricsmode" description:"Start qproxy in metrics mode, to collect queued/inflight metrics per queue"`
+	MetricsNamespace string `long:"metricsnamespace" description:"What namespace to collect additional metrics under" default:"prod"`
 
 	GRPCPort int `long:"grpcport" description:"Port for grpc server to listen on" default:"8887"`
 	HTTPPort int `long:"httpport" description:"Port for http server to listen on" default:"8888"`
