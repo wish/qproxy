@@ -381,9 +381,11 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 		strIdx := strconv.Itoa(idx)
 		attrs := make(map[string]sqs.MessageAttributeValue)
 		for key, val := range message.Attributes {
+			var pointerVal string
+			pointerVal = val
 			attrs[key] = sqs.MessageAttributeValue{
 				DataType:    s.stringType,
-				StringValue: &val,
+				StringValue: &pointerVal,
 			}
 		}
 		entries = append(entries, sqs.SendMessageBatchRequestEntry{
