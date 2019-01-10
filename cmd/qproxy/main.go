@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/wish/qproxy"
+	"github.com/wish/qproxy/config"
 	"github.com/wish/qproxy/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -26,9 +27,9 @@ func main() {
 	//			os.Exit(0)
 	//		}
 	//	}
-	config := qproxy.ParseConfig()
-	if config.Profile != "" {
-		f, err := os.Create(config.Profile)
+	conf := config.ParseConfig()
+	if conf.Profile != "" {
+		f, err := os.Create(conf.Profile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -39,7 +40,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	server, err := qproxy.NewServer(config)
+	server, err := qproxy.NewServer(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func main() {
 	rpc.RegisterQProxyServer(grpcServer, server)
 	reflection.Register(grpcServer)
 	go func() {
-		addr := fmt.Sprintf(":%d", config.GRPCPort)
+		addr := fmt.Sprintf(":%d", conf.GRPCPort)
 		l, err := net.Listen("tcp4", addr)
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
@@ -73,12 +74,12 @@ func main() {
 	}
 	httpServer := &http.Server{
 		Handler:      mux,
-		WriteTimeout: config.WriteTimeout,
-		ReadTimeout:  config.ReadTimeout,
-		IdleTimeout:  config.IdleTimeout,
+		WriteTimeout: conf.WriteTimeout,
+		ReadTimeout:  conf.ReadTimeout,
+		IdleTimeout:  conf.IdleTimeout,
 	}
 	go func() {
-		addr := fmt.Sprintf(":%d", config.HTTPPort)
+		addr := fmt.Sprintf(":%d", conf.HTTPPort)
 		l, err := net.Listen("tcp4", addr)
 		if err != nil {
 			log.Fatalf("failed to create http listen addr: %v", err)
@@ -92,8 +93,8 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 
-	log.Printf("listening on for grpc:%v", config.GRPCPort)
-	log.Printf("listening on for http:%v", config.HTTPPort)
+	log.Printf("listening on for grpc:%v", conf.GRPCPort)
+	log.Printf("listening on for http:%v", conf.HTTPPort)
 
 	select {
 	case <-sigs:
@@ -104,9 +105,9 @@ func main() {
 
 	// Useful for graceful shutdowns, or taking nodes out of rotation
 	// before shutting the service down
-	if config.TermSleep > 0 {
-		log.Printf("sleeping for %+v before running shutdown", config.TermSleep)
-		time.Sleep(config.TermSleep)
+	if conf.TermSleep > 0 {
+		log.Printf("sleeping for %+v before running shutdown", conf.TermSleep)
+		time.Sleep(conf.TermSleep)
 	}
 
 	if err := httpServer.Shutdown(ctx); err != nil {
@@ -114,8 +115,8 @@ func main() {
 	}
 	grpcServer.GracefulStop()
 
-	if config.MemProfile != "" {
-		f, err := os.Create(config.MemProfile)
+	if conf.MemProfile != "" {
+		f, err := os.Create(conf.MemProfile)
 		if err != nil {
 			log.Fatal(err)
 		}

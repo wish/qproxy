@@ -7,18 +7,19 @@ import (
 
 	"github.com/jacksontj/dataman/metrics"
 	"github.com/wish/qproxy/backends/sqs"
+	"github.com/wish/qproxy/config"
 	qmetrics "github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
 )
 
 type QProxyServer struct {
-	config          *Config
+	config          *config.Config
 	backend         rpc.QProxyServer
 	metricsRegistry metrics.Registry
 	m               qmetrics.QProxyMetrics
 }
 
-func NewServer(config *Config) (*QProxyServer, error) {
+func NewServer(conf *config.Config) (*QProxyServer, error) {
 	registry := metrics.NewNamespaceRegistry("qproxy")
 	m, err := qmetrics.NewQProxyMetrics(registry)
 	if err != nil {
@@ -26,19 +27,19 @@ func NewServer(config *Config) (*QProxyServer, error) {
 	}
 
 	server := QProxyServer{
-		config:          config,
+		config:          conf,
 		metricsRegistry: registry,
 		m:               m,
 	}
 
-	switch config.Backend {
-	case SQS:
-		backend, err := sqs.New(config.Region, m, config.MetricsMode, config.MetricsNamespace)
+	switch conf.Backend {
+	case config.SQS:
+		backend, err := sqs.New(conf, m)
 		if err != nil {
 			return nil, err
 		}
 		server.backend = backend
-	case Pubsub:
+	case config.Pubsub:
 		return nil, fmt.Errorf("Pubsub not implemented yet")
 	default:
 		return nil, fmt.Errorf("No backend queueing system specified. Please specify a backend")

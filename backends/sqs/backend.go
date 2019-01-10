@@ -3,6 +3,7 @@ package sqs
 import (
 	"context"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/wish/qproxy/config"
 	"github.com/wish/qproxy/gateway"
 	"github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
@@ -25,12 +27,15 @@ type Backend struct {
 	stringType *string
 }
 
-func New(region string, mets metrics.QProxyMetrics, metricsMode bool, metricsNamespace string) (*Backend, error) {
+func New(conf *config.Config, mets metrics.QProxyMetrics) (*Backend, error) {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return nil, err
 	}
-	cfg.Region = region
+	cfg.Region = conf.Region
+	transport := cfg.HTTPClient.Transport.(*http.Transport)
+	transport.MaxIdleConns = conf.MaxIdleConns
+	transport.MaxIdleConnsPerHost = conf.MaxIdleConns
 
 	svc := sqs.New(cfg)
 
@@ -42,8 +47,8 @@ func New(region string, mets metrics.QProxyMetrics, metricsMode bool, metricsNam
 		stringType:  &stringType,
 	}
 
-	if metricsMode {
-		go backend.collectMetrics(metricsNamespace)
+	if conf.MetricsMode {
+		go backend.collectMetrics(conf.MetricsNamespace)
 	}
 	return &backend, nil
 }
