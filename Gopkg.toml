@@ -6,6 +6,8 @@ required = [
     "github.com/golang/glog",
     "google.golang.org/genproto/googleapis/api/annotations",
     "github.com/ghodss/yaml",
+    "github.com/golang/protobuf/protoc-gen-go",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
 ]
 
 [prune]
