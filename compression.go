@@ -19,7 +19,6 @@ import (
 	"compress/zlib"
 	"io"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/golang/snappy"
@@ -97,38 +96,43 @@ func (c *compressedResponseWriter) Close() {
 
 // Constructs a new compressedResponseWriter based on client request headers.
 func newCompressedResponseWriter(writer http.ResponseWriter, req *http.Request) *compressedResponseWriter {
-	encodings := strings.Split(req.Header.Get(acceptEncodingHeader), ",")
-	for _, encoding := range encodings {
-		switch strings.TrimSpace(encoding) {
-		case gzipEncoding:
-			writer.Header().Set(contentEncodingHeader, gzipEncoding)
-			gw := gzipPool.Get().(*gzip.Writer)
-			gw.Reset(writer)
-			return &compressedResponseWriter{
-				ResponseWriter: writer,
-				writer:         gw,
-			}
-		case deflateEncoding:
-			writer.Header().Set(contentEncodingHeader, deflateEncoding)
-			dw := deflatePool.Get().(*zlib.Writer)
-			dw.Reset(writer)
-			return &compressedResponseWriter{
-				ResponseWriter: writer,
-				writer:         dw,
-			}
-		case snappyEncoding:
-			writer.Header().Set(contentEncodingHeader, snappyEncoding)
-			sw := snappyPool.Get().(*snappy.Writer)
-			sw.Reset(writer)
-			return &compressedResponseWriter{
-				ResponseWriter: writer,
-				writer:         sw,
+	// Disabling compression for now, as Qproxy can have many concurrently open requests due to
+	// long polling, which is eating a lot of memory
+	return nil
+	/*
+		encodings := strings.Split(req.Header.Get(acceptEncodingHeader), ",")
+		for _, encoding := range encodings {
+			switch strings.TrimSpace(encoding) {
+			case gzipEncoding:
+				writer.Header().Set(contentEncodingHeader, gzipEncoding)
+				gw := gzipPool.Get().(*gzip.Writer)
+				gw.Reset(writer)
+				return &compressedResponseWriter{
+					ResponseWriter: writer,
+					writer:         gw,
+				}
+			case deflateEncoding:
+				writer.Header().Set(contentEncodingHeader, deflateEncoding)
+				dw := deflatePool.Get().(*zlib.Writer)
+				dw.Reset(writer)
+				return &compressedResponseWriter{
+					ResponseWriter: writer,
+					writer:         dw,
+				}
+			case snappyEncoding:
+				writer.Header().Set(contentEncodingHeader, snappyEncoding)
+				sw := snappyPool.Get().(*snappy.Writer)
+				sw.Reset(writer)
+				return &compressedResponseWriter{
+					ResponseWriter: writer,
+					writer:         sw,
+				}
 			}
 		}
-	}
 
-	// If we don't have one, return nothing
-	return nil
+		// If we don't have one, return nothing
+		return nil
+	*/
 }
 
 // CompressionHandler is a wrapper around http.Handler which adds suitable
