@@ -6,9 +6,8 @@ import (
 	"net/http/pprof"
 
 	grpcgw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/jacksontj/dataman/metrics/promhandler"
 	"github.com/pkg/errors"
-
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/wish/qproxy/gateway"
 	"github.com/wish/qproxy/rpc"
 )
@@ -24,7 +23,7 @@ func AddRoutes(mux *http.ServeMux, server *QProxyServer) error {
 
 	mux.Handle("/v1/", CompressionHandler{gwmux.ServeHTTP})
 	// Don't need to use our CompressionHandler, as prometheus has their own
-	mux.Handle("/metrics", promhandler.Handler(server.metricsRegistry))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	// TODO: Implement
 	// mux.HandleFunc("/version", server.version)

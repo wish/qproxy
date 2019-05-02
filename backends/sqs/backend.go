@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/wish/qproxy/config"
 	"github.com/wish/qproxy/gateway"
-	"github.com/wish/qproxy/metrics"
+	metrics "github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
 )
 
@@ -92,11 +92,11 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 		if err == nil {
 			queued, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessages"], 10, 64)
 			if err == nil {
-				s.m.Queued.WithValues(id.Namespace, id.Name).Set(float64(queued))
+				s.m.Queued.WithLabelValues(id.Namespace, id.Name).Set(float64(queued))
 			}
 			inflight, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessagesNotVisible"], 10, 64)
 			if err == nil {
-				s.m.Inflight.WithValues(id.Namespace, id.Name).Set(float64(inflight))
+				s.m.Inflight.WithLabelValues(id.Namespace, id.Name).Set(float64(inflight))
 			}
 		}
 		wg.Done()

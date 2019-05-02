@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:c47f4964978e211c6e566596ec6246c329912ea92e9bb99c00798bb4564c5b09"
-  name = "github.com/armon/go-radix"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "1a2de0c21c94309923825da3df33a4381872c795"
-
-[[projects]]
   digest = "1:db212e911b912c1e3e126f05c39908ae73092b7b086c022b3a83d0c6cc580429"
   name = "github.com/aws/aws-sdk-go-v2"
   packages = [
@@ -47,14 +39,6 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
-  digest = "1:a587a158a75d863fef57218f01caa2eb7afb910af2e1f1d9232faafae4651072"
-  name = "github.com/caio/go-tdigest"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ee9572aabd35ae4da9821d909121b12cb7ba3416"
-  version = "v2.1.0"
-
-[[projects]]
   branch = "master"
   digest = "1:8c3f44b655a82b7621e8dbc6f0ab46560151686b0f97714935e0df66780f7597"
   name = "github.com/favadi/protoc-go-inject-tag"
@@ -71,7 +55,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
   name = "github.com/golang/glog"
   packages = ["."]
@@ -109,9 +92,15 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
-  digest = "1:3cbc83a159e161c6cf3e64590ae19da29069ecd8d92f9400ab6fda15e93cbc5f"
+  digest = "1:a43dfe82133794bb938174049019e575b403829da613f0fa39c3a2b29566b263"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
+    "codegenerator",
+    "protoc-gen-grpc-gateway",
+    "protoc-gen-grpc-gateway/descriptor",
+    "protoc-gen-grpc-gateway/generator",
+    "protoc-gen-grpc-gateway/gengateway",
+    "protoc-gen-grpc-gateway/httprule",
     "runtime",
     "runtime/internal",
     "utilities",
@@ -119,17 +108,6 @@
   pruneopts = "UT"
   revision = "aeab1d96e0f1368d243e2e5f526aa29d495517bb"
   version = "v1.5.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:752bea3968364959e65ed12409813407590d05000e32dfd8f0dcbee7a109cc4e"
-  name = "github.com/jacksontj/dataman"
-  packages = [
-    "metrics",
-    "metrics/promhandler",
-  ]
-  pruneopts = "UT"
-  revision = "0ce969695e3e1ab3ef4e8a071c745cab16f4c540"
 
 [[projects]]
   digest = "1:a2cff208d4759f6ba1b1cd228587b0a1869f95f22542ec9cd17fff64430113c7"
@@ -155,14 +133,6 @@
   version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:9f07f801988b225662081432361c430cad8f5293b134e80bdf1998d14969d7a6"
-  name = "github.com/mwitkow/go-conntrack"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "cc309e4a22231782e8893f3c35ced0967807a33e"
-
-[[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -186,11 +156,12 @@
   revision = "e517b90714f7c0eabe6d2e570a5886ae077d6db6"
 
 [[projects]]
-  digest = "1:75d51eeab0df85a3cea9e1297ccd3183b20a10cb4b48c753d8ec8d113cc14250"
+  digest = "1:93a746f1060a8acbcf69344862b2ceced80f854170e1caae089b2834c5fbf7f4"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
     "prometheus/internal",
+    "prometheus/promhttp",
   ]
   pruneopts = "UT"
   revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
@@ -228,14 +199,6 @@
   ]
   pruneopts = "UT"
   revision = "b1a0a9a36d7453ba0f62578b99712f3a6c5f82d1"
-
-[[projects]]
-  digest = "1:1196eb2addaa32fd68a55a8663832d2d9883bbe490413d00fe338cf2821b66fa"
-  name = "github.com/yourbasic/fenwick"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "7cb325001daae879940edf7b19da8557a51ca5f7"
-  version = "1.2.0"
 
 [[projects]]
   branch = "master"
@@ -352,18 +315,16 @@
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go",
     "github.com/golang/snappy",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
-    "github.com/jacksontj/dataman/metrics",
-    "github.com/jacksontj/dataman/metrics/promhandler",
     "github.com/jessevdk/go-flags",
-    "github.com/mwitkow/go-conntrack",
     "github.com/pkg/errors",
     "github.com/pquerna/ffjson",
     "github.com/pquerna/ffjson/fflib/v1",
     "github.com/prometheus/client_golang/prometheus",
+    "github.com/prometheus/client_golang/prometheus/promhttp",
     "golang.org/x/net/context",
-    "golang.org/x/net/trace",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
