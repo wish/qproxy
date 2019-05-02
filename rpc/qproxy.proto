@@ -81,6 +81,7 @@ message QueueId {
 message ListQueuesRequest {
   string Namespace = 1;
   string Filter = 2;
+  int64 RPCTimeout = 100;
 }
 
 message ListQueuesResponse {
@@ -89,6 +90,7 @@ message ListQueuesResponse {
 
 message GetQueueRequest {
   QueueId Id = 1;
+  int64 RPCTimeout = 100;
 }
 
 message GetQueueResponse {
@@ -98,6 +100,7 @@ message GetQueueResponse {
 message CreateQueueRequest {
   QueueId Id = 1;
   map<string, string> Attributes = 2;
+  int64 RPCTimeout = 100;
 }
 
 message CreateQueueResponse {
@@ -105,6 +108,7 @@ message CreateQueueResponse {
 
 message DeleteQueueRequest {
   QueueId Id = 1;
+  int64 RPCTimeout = 100;
 }
 
 message DeleteQueueResponse {
@@ -113,6 +117,7 @@ message DeleteQueueResponse {
 message ModifyQueueRequest {
   QueueId Id = 1;
   map<string, string> Attributes = 2;
+  int64 RPCTimeout = 100;
 }
 
 message ModifyQueueResponse {
@@ -120,6 +125,7 @@ message ModifyQueueResponse {
 
 message PurgeQueueRequest {
   QueueId Id = 1;
+  int64 RPCTimeout = 100;
 }
 
 message PurgeQueueResponse {
@@ -145,6 +151,7 @@ message Message {
 message AckMessagesRequest {
   QueueId QueueId = 1;
   repeated MessageReceipt Receipts = 2;
+  int64 RPCTimeout = 100;
 }
 
 message AckMessagesResponse {
@@ -158,6 +165,7 @@ message GetMessagesRequest {
   int64 LongPollSeconds = 2;
   int64 MaxMessages = 3;
   int64 AckDeadlineSeconds = 4;
+  int64 RPCTimeout = 100;
 }
 
 message GetMessagesResponse {
@@ -167,6 +175,7 @@ message GetMessagesResponse {
 message PublishMessagesRequest {
   QueueId QueueId = 1;
   repeated Message Messages = 2;
+  int64 RPCTimeout = 100;
 }
 
 message PublishMessagesResponse {
@@ -178,6 +187,7 @@ message ModifyAckDeadlineRequest {
   QueueId QueueId = 1;
   MessageReceipt Receipt = 2;
   int64 AckDeadlineSeconds = 3;
+  int64 RPCTimeout = 100;
 }
 
 message ModifyAckDeadlineResponse {

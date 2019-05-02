@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/jessevdk/go-flags"
 	"log"
 	"time"
+
+	"github.com/jessevdk/go-flags"
 )
 
 const (
@@ -12,11 +13,12 @@ const (
 )
 
 type Config struct {
-	Backend          string `long:"backend" description:"Backend queueing system to use" required:"true"`
-	Region           string `long:"region" description:"Region to connect to (if applicable)"`
-	MetricsMode      bool   `long:"metricsmode" description:"Start qproxy in metrics mode, to collect queued/inflight metrics per queue"`
-	MetricsNamespace string `long:"metricsnamespace" description:"What namespace to collect additional metrics under" default:"prod"`
-	MaxIdleConns     int    `long:"maxidleconns" description:"Maximum number of connections to hold to the backend" default:"1000"`
+	Backend           string        `long:"backend" description:"Backend queueing system to use" required:"true"`
+	Region            string        `long:"region" description:"Region to connect to (if applicable)"`
+	MetricsMode       bool          `long:"metricsmode" description:"Start qproxy in metrics mode, to collect queued/inflight metrics per queue"`
+	MetricsNamespace  string        `long:"metricsnamespace" description:"What namespace to collect additional metrics under" default:"prod"`
+	MaxIdleConns      int           `long:"maxidleconns" description:"Maximum number of connections to hold to the backend" default:"1000"`
+	DefaultRPCTimeout time.Duration `long:"defaultrpctimeout" description:"Default rpc timeout if none specified" default:"30s"`
 
 	GRPCPort int `long:"grpcport" description:"Port for grpc server to listen on" default:"8887"`
 	HTTPPort int `long:"httpport" description:"Port for http server to listen on" default:"8888"`

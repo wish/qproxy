@@ -44,6 +44,24 @@ func NewServer(conf *config.Config) (*QProxyServer, error) {
 	return &server, nil
 }
 
+type ListQueuesServerStream struct {
+	rpc.QProxy_ListQueuesServer
+	NewCtx context.Context
+}
+
+func (x ListQueuesServerStream) Context() context.Context {
+	return x.NewCtx
+}
+
+func (s *QProxyServer) setContextTimeout(ctx context.Context, timeout int64) context.Context {
+	if timeout <= int64(0) {
+		ctx, _ = context.WithTimeout(ctx, s.config.DefaultRPCTimeout)
+	} else {
+		ctx, _ = context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+	}
+	return ctx
+}
+
 func (s *QProxyServer) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQueuesServer) (err error) {
 	start := time.Now()
 	s.m.APIHits.WithLabelValues("ListQueues", in.Namespace, "").Inc()
@@ -53,7 +71,11 @@ func (s *QProxyServer) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_L
 			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, "").Inc()
 		}
 	}()
-	return s.backend.ListQueues(in, stream)
+	streamWithTimeout := ListQueuesServerStream{
+		QProxy_ListQueuesServer: stream,
+		NewCtx:                  s.setContextTimeout(stream.Context(), in.RPCTimeout),
+	}
+	return s.backend.ListQueues(in, streamWithTimeout)
 }
 
 func (s *QProxyServer) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (resp *rpc.GetQueueResponse, err error) {
@@ -65,6 +87,7 @@ func (s *QProxyServer) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (r
 			s.m.APIErrors.WithLabelValues("GetQueue", in.Id.Namespace, in.Id.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.GetQueue(ctx, in)
 }
 
@@ -77,6 +100,7 @@ func (s *QProxyServer) CreateQueue(ctx context.Context, in *rpc.CreateQueueReque
 			s.m.APIErrors.WithLabelValues("CreateQueue", in.Id.Namespace, in.Id.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.CreateQueue(ctx, in)
 }
 
@@ -89,6 +113,7 @@ func (s *QProxyServer) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueReque
 			s.m.APIErrors.WithLabelValues("DeleteQueue", in.Id.Namespace, in.Id.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.DeleteQueue(ctx, in)
 }
 
@@ -101,6 +126,7 @@ func (s *QProxyServer) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueReque
 			s.m.APIErrors.WithLabelValues("ModifyQueue", in.Id.Namespace, in.Id.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.ModifyQueue(ctx, in)
 }
 
@@ -113,6 +139,7 @@ func (s *QProxyServer) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest
 			s.m.APIErrors.WithLabelValues("PurgeQueue", in.Id.Namespace, in.Id.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.PurgeQueue(ctx, in)
 }
 
@@ -127,6 +154,7 @@ func (s *QProxyServer) AckMessages(ctx context.Context, in *rpc.AckMessagesReque
 			s.m.Acknowledged.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Receipts) - len(resp.Failed)))
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.AckMessages(ctx, in)
 }
 
@@ -141,6 +169,7 @@ func (s *QProxyServer) GetMessages(ctx context.Context, in *rpc.GetMessagesReque
 			s.m.Received.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(resp.Messages)))
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.GetMessages(ctx, in)
 }
 
@@ -155,6 +184,7 @@ func (s *QProxyServer) PublishMessages(ctx context.Context, in *rpc.PublishMessa
 			s.m.Published.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Messages) - len(resp.Failed)))
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.PublishMessages(ctx, in)
 }
 
@@ -167,6 +197,7 @@ func (s *QProxyServer) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckD
 			s.m.APIErrors.WithLabelValues("ModifyAckDeadline", in.QueueId.Namespace, in.QueueId.Name).Inc()
 		}
 	}()
+	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
 	return s.backend.ModifyAckDeadline(ctx, in)
 }
 
