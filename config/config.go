@@ -18,6 +18,7 @@ type Config struct {
 	MetricsMode       bool          `long:"metricsmode" description:"Start qproxy in metrics mode, to collect queued/inflight metrics per queue"`
 	MetricsNamespace  string        `long:"metricsnamespace" description:"What namespace to collect additional metrics under" default:"prod"`
 	MaxIdleConns      int           `long:"maxidleconns" description:"Maximum number of connections to hold to the backend" default:"1000"`
+	MaxConnsPerHost   int           `long:"maxconnsperhost" description:"Maximum number of connections to have open to the backend" default:"10000"`
 	DefaultRPCTimeout time.Duration `long:"defaultrpctimeout" description:"Default rpc timeout if none specified" default:"30s"`
 
 	GRPCPort int `long:"grpcport" description:"Port for grpc server to listen on" default:"8887"`

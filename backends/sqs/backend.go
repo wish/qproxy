@@ -36,6 +36,7 @@ func New(conf *config.Config, mets metrics.QProxyMetrics) (*Backend, error) {
 	transport := cfg.HTTPClient.Transport.(*http.Transport)
 	transport.MaxIdleConns = conf.MaxIdleConns
 	transport.MaxIdleConnsPerHost = conf.MaxIdleConns
+	transport.MaxConnsPerHost = conf.MaxConnsPerHost
 
 	svc := sqs.New(cfg)
 
