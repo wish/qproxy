@@ -1,7 +1,5 @@
 FROM golang:1.11-stretch as builder
 RUN apt-get update && apt-get -y install git unzip
-ADD https://github.com/golang/dep/releases/download/v0.5.4/dep-linux-amd64 /
-RUN chmod +x /dep-linux-amd64 && mv /dep-linux-amd64 /go/bin/dep
 ADD https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip /
 RUN unzip -o /protoc-3.6.1-linux-x86_64.zip -d /usr/local
 COPY . /go/src/github.com/wish/qproxy

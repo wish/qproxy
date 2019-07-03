@@ -15,14 +15,14 @@ default: \
 	build/qproxy.linux \
 	build/qproxy.darwin
 
-build/qproxy.linux: vendor ${GOFILES}
+build/qproxy.linux: ${GOFILES}
 	@echo "$@"
 	@GOOS=linux CGO_ENABLED=0 go build -o build/qproxy.linux -ldflags\
 		"-X github.com/wish/qproxy.Version=$(VERSION)$(V_DIRTY) \
 		 -X github.com/wish/qproxy.Git=$(GIT)$(DIRTY)" \
 		github.com/wish/qproxy/cmd/qproxy
 
-build/qproxy.darwin: vendor ${GOFILES}
+build/qproxy.darwin: ${GOFILES}
 	@echo "$@"
 	@GOOS=darwin CGO_ENABLED=0 go build -o build/qproxy.darwin -ldflags\
 		"-X github.com/wish/qproxy.Version=$(VERSION)$(V_DIRTY) \
@@ -55,9 +55,6 @@ rpc/qproxy.pb_ffjson.go: ${FFJ} rpc/qproxy.pb.go rpc/qproxy.pb.gw.go
 rpc/qproxy.pb_jsonpb.go: rpc/qproxy.pb_ffjson.go
 	@cp rpc/qproxy.pb_jsonpb.go.stub rpc/qproxy.pb_jsonpb.go
 
-vendor: Gopkg.toml Gopkg.lock
-	dep ensure
-
 .PHONY: coverage
 coverage:
 	@go test -coverprofile=/tmp/cover github.com/wish/qproxy
@@ -79,7 +76,6 @@ vtest: default
 .PHONY: clean
 clean:
 	rm -rf build
-	rm -rf vendor
 	rm -f rpc/qproxy.pb.go rpc/qproxy.pb.gw.go rpc/qproxy.pb_ffjson.go rpc/qproxy.pb_jsonpb.go
 	rm -f bin/ffjson bin/protoc-gen-go bin/protoc-gen-grpc-gateway bin/protoc-go-inject-tag
 
