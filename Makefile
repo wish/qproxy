@@ -11,9 +11,7 @@ DIRTY   := $(shell git diff-index --quiet HEAD 2> /dev/null > /dev/null || echo 
 
 GOFILES := $(shell find . -type f | grep go$$ ) rpc/qproxy.pb_ffjson.go rpc/qproxy.pb_jsonpb.go
 
-default: \
-	build/qproxy.linux \
-	build/qproxy.darwin
+default: build/qproxy.linux
 
 build/qproxy.linux: ${GOFILES}
 	@echo "$@"
