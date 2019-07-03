@@ -1,0 +1,28 @@
+notifications:
+  email: false
+
+language: go
+
+# cache go build cache and pkg mod
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
+go:
+  - "1.12.x"
+
+# only build commits/PRs targeted to the master branch
+# this avoids duplicate builds for push + PR
+branches:
+  only:
+    - master
+
+# have an empty install to avoid travis doing a go get
+install:
+  - sudo apt-get update && sudo apt-get -y install git unzip
+  - wget https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip && sudo unzip -o protoc-3.6.1-linux-x86_64.zip -d /usr/local
+  - sudo chmod -R +r /usr/local
+
+script:
+  - make test
