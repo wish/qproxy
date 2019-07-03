@@ -62,7 +62,7 @@ func main() {
 			// Because we graceful stop, just log this out
 			// GracefulStop will kill l, but we should not
 			// throw an error to let it shut down gracefully
-			log.Printf("failed to serve: ", err)
+			log.Printf("failed to serve: %v", err)
 		}
 		cancel()
 	}()
