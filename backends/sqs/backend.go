@@ -20,7 +20,7 @@ import (
 type Backend struct {
 	// TODO: LRU Cache?
 	nameMapping *sync.Map
-	sqs         *sqs.SQS
+	sqs         *sqs.Client
 
 	m metrics.QProxyMetrics
 	// Perf optimization
@@ -137,9 +137,7 @@ func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, err
 		QueueName: QueueIdToName(in),
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -162,12 +160,11 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 	})
 
 	ctx := stream.Context()
-	req.SetContext(ctx)
 
 	// TODO: The ListQueues API has a 1000 object return limit, and no paging functionality
 	// so we'll either need to do some extra work here to get _all_ results or add
 	// a field to the response indicating that it was truncated
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return err
 	}
@@ -212,9 +209,7 @@ func (s *Backend) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (*rpc.G
 		AttributeNames: []sqs.QueueAttributeName{sqs.QueueAttributeNameAll},
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -229,9 +224,7 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 		Attributes: in.Attributes,
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +243,7 @@ func (s *Backend) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest) (
 		QueueUrl: &url,
 	})
 
-	req.SetContext(ctx)
-
-	_, err = req.Send()
+	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -271,9 +262,7 @@ func (s *Backend) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest) (
 		Attributes: in.Attributes,
 	})
 
-	req.SetContext(ctx)
-
-	_, err = req.Send()
+	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -291,9 +280,7 @@ func (s *Backend) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest) (*r
 		QueueUrl: &url,
 	})
 
-	req.SetContext(ctx)
-
-	_, err = req.Send()
+	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -321,9 +308,7 @@ func (s *Backend) AckMessages(ctx context.Context, in *rpc.AckMessagesRequest) (
 		Entries:  entries,
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -351,9 +336,7 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 		VisibilityTimeout:     &in.AckDeadlineSeconds,
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -406,9 +389,7 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 		Entries:  entries,
 	})
 
-	req.SetContext(ctx)
-
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -439,9 +420,7 @@ func (s *Backend) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckDeadli
 		VisibilityTimeout: &in.AckDeadlineSeconds,
 	})
 
-	req.SetContext(ctx)
-
-	_, err = req.Send()
+	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
