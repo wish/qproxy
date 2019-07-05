@@ -8,44 +8,43 @@ import (
 	"github.com/aws/aws-sdk-go-v2/private/protocol/query"
 )
 
-// STS provides the API operation methods for making requests to
-// AWS Security Token Service. See this package's package overview docs
+// Client provides the API operation methods for making requests to
+// AWS STS. See this package's package overview docs
 // for details on the service.
 //
-// STS methods are safe to use concurrently. It is not safe to
+// The client's methods are safe to use concurrently. It is not safe to
 // modify mutate any of the struct's properties though.
-type STS struct {
+type Client struct {
 	*aws.Client
 }
 
 // Used for custom client initialization logic
-var initClient func(*STS)
+var initClient func(*Client)
 
 // Used for custom request initialization logic
-var initRequest func(*STS, *aws.Request)
+var initRequest func(*Client, *aws.Request)
 
-// Service information constants
 const (
-	ServiceName = "sts"       // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
+	ServiceName = "AWS STS" // Service's name
+	ServiceID   = "STS"     // Service's identifier
+	EndpointsID = "sts"     // Service's Endpoint identifier
 )
 
-// New creates a new instance of the STS client with a config.
+// New creates a new instance of the client from the provided Config.
 //
 // Example:
-//     // Create a STS client from just a config.
+//     // Create a client from just a config.
 //     svc := sts.New(myConfig)
-func New(config aws.Config) *STS {
-	var signingName string
-	signingRegion := config.Region
-
-	svc := &STS{
+func New(config aws.Config) *Client {
+	svc := &Client{
 		Client: aws.NewClient(
 			config,
 			aws.Metadata{
 				ServiceName:   ServiceName,
-				SigningName:   signingName,
-				SigningRegion: signingRegion,
+				ServiceID:     ServiceID,
+				EndpointsID:   EndpointsID,
+				SigningName:   "sts",
+				SigningRegion: config.Region,
 				APIVersion:    "2011-06-15",
 			},
 		),
@@ -66,9 +65,9 @@ func New(config aws.Config) *STS {
 	return svc
 }
 
-// newRequest creates a new request for a STS operation and runs any
+// newRequest creates a new request for a client operation and runs any
 // custom request initialization.
-func (c *STS) newRequest(op *aws.Operation, params, data interface{}) *aws.Request {
+func (c *Client) newRequest(op *aws.Operation, params, data interface{}) *aws.Request {
 	req := c.NewRequest(op, params, data)
 
 	// Run custom request initialization if present

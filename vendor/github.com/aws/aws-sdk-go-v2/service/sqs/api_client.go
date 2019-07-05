@@ -8,13 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/private/protocol/query"
 )
 
-// SQS provides the API operation methods for making requests to
-// Amazon Simple Queue Service. See this package's package overview docs
+// Client provides the API operation methods for making requests to
+// Amazon SQS. See this package's package overview docs
 // for details on the service.
 //
-// SQS methods are safe to use concurrently. It is not safe to
+// The client's methods are safe to use concurrently. It is not safe to
 // modify mutate any of the struct's properties though.
-type SQS struct {
+type Client struct {
 	*aws.Client
 
 	// Service specific configurations. (codegen: service_specific_config.go)
@@ -24,33 +24,32 @@ type SQS struct {
 }
 
 // Used for custom client initialization logic
-var initClient func(*SQS)
+var initClient func(*Client)
 
 // Used for custom request initialization logic
-var initRequest func(*SQS, *aws.Request)
+var initRequest func(*Client, *aws.Request)
 
-// Service information constants
 const (
-	ServiceName = "sqs"       // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
+	ServiceName = "Amazon SQS" // Service's name
+	ServiceID   = "SQS"        // Service's identifier
+	EndpointsID = "sqs"        // Service's Endpoint identifier
 )
 
-// New creates a new instance of the SQS client with a config.
+// New creates a new instance of the client from the provided Config.
 //
 // Example:
-//     // Create a SQS client from just a config.
+//     // Create a client from just a config.
 //     svc := sqs.New(myConfig)
-func New(config aws.Config) *SQS {
-	var signingName string
-	signingRegion := config.Region
-
-	svc := &SQS{
+func New(config aws.Config) *Client {
+	svc := &Client{
 		Client: aws.NewClient(
 			config,
 			aws.Metadata{
 				ServiceName:   ServiceName,
-				SigningName:   signingName,
-				SigningRegion: signingRegion,
+				ServiceID:     ServiceID,
+				EndpointsID:   EndpointsID,
+				SigningName:   "sqs",
+				SigningRegion: config.Region,
 				APIVersion:    "2012-11-05",
 			},
 		),
@@ -71,9 +70,9 @@ func New(config aws.Config) *SQS {
 	return svc
 }
 
-// newRequest creates a new request for a SQS operation and runs any
+// newRequest creates a new request for a client operation and runs any
 // custom request initialization.
-func (c *SQS) newRequest(op *aws.Operation, params, data interface{}) *aws.Request {
+func (c *Client) newRequest(op *aws.Operation, params, data interface{}) *aws.Request {
 	req := c.NewRequest(op, params, data)
 
 	// Run custom request initialization if present
