@@ -168,11 +168,15 @@ func (s *QProxyServer) AckMessages(ctx context.Context, in *rpc.AckMessagesReque
 
 func (s *QProxyServer) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (resp *rpc.GetMessagesResponse, err error) {
 	start := time.Now()
-	s.m.APIHits.WithLabelValues("GetMessages", in.QueueId.Namespace, in.QueueId.Name).Inc()
+	apiName := "GetMessages"
+	if in.LongPollSeconds <= 0 {
+		apiName = "GetMessagesShortPoll"
+	}
+	s.m.APIHits.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name).Inc()
 	defer func() {
-		s.m.APILatency.WithLabelValues("GetMessages", in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
+		s.m.APILatency.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("GetMessages", in.QueueId.Namespace, in.QueueId.Name).Inc()
+			s.m.APIErrors.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name).Inc()
 			log.Println("Error GetMessages: ", err)
 		} else {
 			s.m.Received.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(resp.Messages)))
