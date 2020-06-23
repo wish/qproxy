@@ -92,7 +92,7 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 	}
 
 	collectFunc := func(id *rpc.QueueId, wg *sync.WaitGroup) {
-		wg.Add(1)
+		defer wg.Done()
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 		attrs, err := s.GetQueue(ctx, &rpc.GetQueueRequest{Id: id})
 		if err == nil {
@@ -105,7 +105,6 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 				s.m.Inflight.WithLabelValues(id.Namespace, id.Name).Set(float64(inflight))
 			}
 		}
-		wg.Done()
 	}
 
 	newQueues, err := updateFunc()
@@ -124,6 +123,7 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 		case <-collectTicker.C:
 			wg := sync.WaitGroup{}
 			for _, queue := range queues {
+        		wg.Add(1)
 				go collectFunc(queue, &wg)
 			}
 			wg.Wait()
