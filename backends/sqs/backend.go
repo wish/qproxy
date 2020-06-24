@@ -2,7 +2,9 @@ package sqs
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -155,22 +157,28 @@ func (s *Backend) updateNameMapping(in *rpc.QueueId, url *string) {
 }
 
 func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQueuesServer) (err error) {
-	req := s.sqs.ListQueuesRequest(&sqs.ListQueuesInput{
-		QueueNamePrefix: &in.Namespace,
-	})
-
+	var queue []string
 	ctx := stream.Context()
-
-	// TODO: The ListQueues API has a 1000 object return limit, and no paging functionality
+	// TODO: The ListQueues API has a 1000 object return limit
+	// hacky way to get all the queues from aws, as aws api maximum can only return 1000 queueus
 	// so we'll either need to do some extra work here to get _all_ results or add
 	// a field to the response indicating that it was truncated
-	resp, err := req.Send(ctx)
-	if err != nil {
-		return err
+	for i := 0; i < 26; i++ {
+		mask := 'a' + i
+		input := &sqs.ListQueuesInput{
+			QueueNamePrefix:aws.String(in.Namespace + "_" + string(mask)),
+		}
+		req := s.sqs.ListQueuesRequest(input)
+		resp, err := req.Send(ctx)
+		if err != nil {
+			return err
+		}
+		queue = append(queue, resp.QueueUrls...)
 	}
+	log.Printf("ListQueue results: Got total %v queues", len(queue))
 
 	buf := make([]*rpc.QueueId, 0, 100)
-	for idx, url := range resp.QueueUrls {
+	for idx, url := range queue {
 		if idx != 0 && idx%100 == 0 {
 			stream.Send(&rpc.ListQueuesResponse{
 				Queues: buf,
