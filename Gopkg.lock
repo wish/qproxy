@@ -2,33 +2,49 @@
 
 
 [[projects]]
-  digest = "1:b1c3b5fb9c02d7fb490bd412a39da1ce1e79d59b52f1ca926b62e39ad6c4b406"
-  name = "github.com/aws/aws-sdk-go-v2"
+  digest = "1:b239bc478e70772a6dcbc350dfd1c5906220df817cffda8c297430e01a0d17df"
+  name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
     "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/processcreds",
+    "aws/credentials/stscreds",
+    "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
-    "aws/ec2rolecreds",
-    "aws/endpointcreds",
     "aws/endpoints",
-    "aws/external",
+    "aws/request",
+    "aws/session",
     "aws/signer/v4",
-    "aws/stscreds",
-    "internal/awsutil",
+    "internal/context",
     "internal/ini",
-    "internal/sdk",
+    "internal/sdkio",
+    "internal/sdkmath",
+    "internal/sdkrand",
+    "internal/sdkuri",
+    "internal/shareddefaults",
+    "internal/strings",
+    "internal/sync/singleflight",
     "private/protocol",
+    "private/protocol/json/jsonutil",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
     "service/sqs",
     "service/sts",
+    "service/sts/stsiface",
   ]
   pruneopts = "UT"
-  revision = "098e15df3044cf1b04a222c1c33c3e6135ac89f3"
-  version = "v0.9.0"
+  revision = "7a3b1619a01ec95e896752b620dd3fb9155c7909"
+  version = "v1.32.8"
 
 [[projects]]
   branch = "master"
@@ -52,7 +68,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
@@ -306,25 +321,33 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/aws/aws-sdk-go-v2/aws/external",
-    "github.com/aws/aws-sdk-go-v2/service/sqs",
+    "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/favadi/protoc-go-inject-tag",
     "github.com/ghodss/yaml",
     "github.com/golang/glog",
+    "github.com/golang/protobuf/jsonpb",
+    "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go",
     "github.com/golang/snappy",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
+    "github.com/grpc-ecosystem/grpc-gateway/utilities",
     "github.com/jessevdk/go-flags",
     "github.com/pkg/errors",
     "github.com/pquerna/ffjson",
+    "github.com/pquerna/ffjson/fflib/v1",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "golang.org/x/net/context",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/grpclog",
     "google.golang.org/grpc/metadata",
     "google.golang.org/grpc/reflection",
+    "google.golang.org/grpc/status",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
