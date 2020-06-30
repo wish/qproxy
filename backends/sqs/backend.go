@@ -3,14 +3,16 @@ package sqs
 import (
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws/external"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/wish/qproxy/config"
 	"github.com/wish/qproxy/gateway"
 	metrics "github.com/wish/qproxy/metrics"
@@ -20,7 +22,7 @@ import (
 type Backend struct {
 	// TODO: LRU Cache?
 	nameMapping *sync.Map
-	sqs         *sqs.Client
+	sqs         *sqs.SQS
 
 	m metrics.QProxyMetrics
 	// Perf optimization
@@ -28,17 +30,20 @@ type Backend struct {
 }
 
 func New(conf *config.Config, mets metrics.QProxyMetrics) (*Backend, error) {
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		return nil, err
+	client := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        conf.MaxIdleConns,
+			MaxIdleConnsPerHost: conf.MaxIdleConns,
+			MaxConnsPerHost:     conf.MaxConnsPerHost,
+		},
 	}
-	cfg.Region = conf.Region
-	transport := cfg.HTTPClient.Transport.(*http.Transport)
-	transport.MaxIdleConns = conf.MaxIdleConns
-	transport.MaxIdleConnsPerHost = conf.MaxIdleConns
-	transport.MaxConnsPerHost = conf.MaxConnsPerHost
+	cfg := &aws.Config{
+		Region:     aws.String(conf.Region),
+		HTTPClient: client,
+	}
+	ses := session.Must(session.NewSession())
 
-	svc := sqs.New(cfg)
+	svc := sqs.New(ses, cfg)
 
 	stringType := "String"
 	backend := Backend{
@@ -133,17 +138,16 @@ func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, err
 
 	// The mapping from QueueId -> QueueUrl does not exist in our cache.
 	// Let's look it up
-	req := s.sqs.GetQueueUrlRequest(&sqs.GetQueueUrlInput{
+	output, err := s.sqs.GetQueueUrlWithContext(ctx, &sqs.GetQueueUrlInput{
 		QueueName: QueueIdToName(in),
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return "", err
 	}
-	s.updateNameMapping(in, resp.QueueUrl)
+	s.updateNameMapping(in, output.QueueUrl)
 
-	return *resp.QueueUrl, nil
+	return *output.QueueUrl, nil
 }
 
 func (s *Backend) queueIdToKey(in *rpc.QueueId) string {
@@ -155,40 +159,43 @@ func (s *Backend) updateNameMapping(in *rpc.QueueId, url *string) {
 }
 
 func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQueuesServer) (err error) {
-	req := s.sqs.ListQueuesRequest(&sqs.ListQueuesInput{
+	buf := make([]*rpc.QueueId, 0, 100)
+	input := &sqs.ListQueuesInput{
+		MaxResults:      aws.Int64(1000),
 		QueueNamePrefix: &in.Namespace,
-	})
-
+	}
 	ctx := stream.Context()
+	count := 0
+	err = s.sqs.ListQueuesPagesWithContext(ctx, input,
+		func(page *sqs.ListQueuesOutput, lastPage bool) bool {
+			count += len(page.QueueUrls)
+			for idx, url := range page.QueueUrls {
+				if idx != 0 && idx%100 == 0 {
+					stream.Send(&rpc.ListQueuesResponse{
+						Queues: buf,
+					})
+					buf = make([]*rpc.QueueId, 0, 100)
+				}
 
-	// TODO: The ListQueues API has a 1000 object return limit, and no paging functionality
-	// so we'll either need to do some extra work here to get _all_ results or add
-	// a field to the response indicating that it was truncated
-	resp, err := req.Send(ctx)
+				if queueId, err := QueueUrlToQueueId(*url); err != nil {
+					log.Printf("Got error while converting queue url: %v", err)
+					return false
+				} else if strings.Contains(queueId.Name, in.Filter) {
+					buf = append(buf, queueId)
+				}
+			}
+			return true
+		})
 	if err != nil {
+		log.Printf("Got error while querying sqs: %v", err)
 		return err
 	}
+	log.Printf("ListQueue results: Got total %v queues", count)
 
-	buf := make([]*rpc.QueueId, 0, 100)
-	for idx, url := range resp.QueueUrls {
-		if idx != 0 && idx%100 == 0 {
-			stream.Send(&rpc.ListQueuesResponse{
-				Queues: buf,
-			})
-			buf = make([]*rpc.QueueId, 0, 100)
-		}
-
-		if queueId, err := QueueUrlToQueueId(url); err != nil {
-			return err
-		} else if strings.Contains(queueId.Name, in.Filter) {
-			buf = append(buf, queueId)
-		}
-	}
 	// Send any remaining queues not flushed
 	stream.Send(&rpc.ListQueuesResponse{
 		Queues: buf,
 	})
-
 	// Send a terminating trailer chunk if we haven't already
 	if len(buf) > 0 {
 		stream.Send(&rpc.ListQueuesResponse{
@@ -204,31 +211,37 @@ func (s *Backend) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (*rpc.G
 		return nil, err
 	}
 
-	req := s.sqs.GetQueueAttributesRequest(&sqs.GetQueueAttributesInput{
+	output, err := s.sqs.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl:       &url,
-		AttributeNames: []sqs.QueueAttributeName{sqs.QueueAttributeNameAll},
+		AttributeNames: []*string{aws.String("All")},
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &rpc.GetQueueResponse{Attributes: resp.Attributes}, nil
+	attributes := make(map[string]string)
+	for k, v := range output.Attributes {
+		attributes[k] = *v
+	}
+	return &rpc.GetQueueResponse{Attributes: attributes}, nil
 }
 
 func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (*rpc.CreateQueueResponse, error) {
 	queueName := QueueIdToName(in.Id)
-	req := s.sqs.CreateQueueRequest(&sqs.CreateQueueInput{
+	attributes := make(map[string]*string)
+	for k, v := range in.Attributes {
+		attributes[k] = &v
+	}
+	output, err := s.sqs.CreateQueueWithContext(ctx, &sqs.CreateQueueInput{
 		QueueName:  queueName,
-		Attributes: in.Attributes,
+		Attributes: attributes,
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
-	s.updateNameMapping(in.Id, resp.QueueUrl)
+	s.updateNameMapping(in.Id, output.QueueUrl)
 
 	return &rpc.CreateQueueResponse{}, nil
 }
@@ -239,11 +252,10 @@ func (s *Backend) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueRequest) (
 		return nil, err
 	}
 
-	req := s.sqs.DeleteQueueRequest(&sqs.DeleteQueueInput{
+	_, err = s.sqs.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: &url,
 	})
 
-	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -257,12 +269,15 @@ func (s *Backend) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest) (
 		return nil, err
 	}
 
-	req := s.sqs.SetQueueAttributesRequest(&sqs.SetQueueAttributesInput{
+	attributes := make(map[string]*string)
+	for k, v := range in.Attributes {
+		attributes[k] = &v
+	}
+	_, err = s.sqs.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
 		QueueUrl:   &url,
-		Attributes: in.Attributes,
+		Attributes: attributes,
 	})
 
-	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -276,11 +291,10 @@ func (s *Backend) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest) (*r
 		return nil, err
 	}
 
-	req := s.sqs.PurgeQueueRequest(&sqs.PurgeQueueInput{
+	_, err = s.sqs.PurgeQueueWithContext(ctx, &sqs.PurgeQueueInput{
 		QueueUrl: &url,
 	})
 
-	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -294,27 +308,26 @@ func (s *Backend) AckMessages(ctx context.Context, in *rpc.AckMessagesRequest) (
 		return nil, err
 	}
 
-	entries := make([]sqs.DeleteMessageBatchRequestEntry, 0, len(in.Receipts))
+	entries := make([]*sqs.DeleteMessageBatchRequestEntry, 0, len(in.Receipts))
 	for idx, receipt := range in.Receipts {
 		strIdx := strconv.Itoa(idx)
-		entries = append(entries, sqs.DeleteMessageBatchRequestEntry{
+		entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
 			Id:            &strIdx,
 			ReceiptHandle: &receipt.Id,
 		})
 	}
 
-	req := s.sqs.DeleteMessageBatchRequest(&sqs.DeleteMessageBatchInput{
+	output, err := s.sqs.DeleteMessageBatchWithContext(ctx, &sqs.DeleteMessageBatchInput{
 		QueueUrl: &url,
 		Entries:  entries,
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	failed := make([]*rpc.MessageReceipt, 0, len(in.Receipts))
-	for idx, fail := range resp.Failed {
+	for idx, fail := range output.Failed {
 		failedReceipt := in.Receipts[int(idx)]
 		failedReceipt.ErrorMessage = *fail.Message
 		failed = append(failed, failedReceipt)
@@ -328,21 +341,20 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 		return nil, err
 	}
 
-	req := s.sqs.ReceiveMessageRequest(&sqs.ReceiveMessageInput{
-		MessageAttributeNames: []string{"All"},
+	output, err := s.sqs.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+		MessageAttributeNames: []*string{aws.String("All")},
 		QueueUrl:              &url,
 		WaitTimeSeconds:       &in.LongPollSeconds,
 		MaxNumberOfMessages:   &in.MaxMessages,
 		VisibilityTimeout:     &in.AckDeadlineSeconds,
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	messages := make([]*rpc.Message, 0, len(resp.Messages))
-	for _, message := range resp.Messages {
+	messages := make([]*rpc.Message, 0, len(output.Messages))
+	for _, message := range output.Messages {
 		attributes := make(map[string]string)
 		for key, valueStruct := range message.MessageAttributes {
 			attributes[key] = *valueStruct.StringValue
@@ -365,37 +377,36 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 		return nil, err
 	}
 
-	entries := make([]sqs.SendMessageBatchRequestEntry, 0, len(in.Messages))
+	entries := make([]*sqs.SendMessageBatchRequestEntry, 0, len(in.Messages))
 	for idx, message := range in.Messages {
 		strIdx := strconv.Itoa(idx)
-		attrs := make(map[string]sqs.MessageAttributeValue)
+		attrs := make(map[string]*sqs.MessageAttributeValue)
 		for key, val := range message.Attributes {
 			var pointerVal string
 			pointerVal = val
-			attrs[key] = sqs.MessageAttributeValue{
+			attrs[key] = &sqs.MessageAttributeValue{
 				DataType:    s.stringType,
 				StringValue: &pointerVal,
 			}
 		}
-		entries = append(entries, sqs.SendMessageBatchRequestEntry{
+		entries = append(entries, &sqs.SendMessageBatchRequestEntry{
 			Id:                &strIdx,
 			MessageAttributes: attrs,
 			MessageBody:       &message.Data,
 		})
 	}
 
-	req := s.sqs.SendMessageBatchRequest(&sqs.SendMessageBatchInput{
+	output, err := s.sqs.SendMessageBatchWithContext(ctx, &sqs.SendMessageBatchInput{
 		QueueUrl: &url,
 		Entries:  entries,
 	})
 
-	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	failed := make([]*rpc.FailedPublish, 0, len(resp.Failed))
-	for _, fail := range resp.Failed {
+	failed := make([]*rpc.FailedPublish, 0, len(output.Failed))
+	for _, fail := range output.Failed {
 		if index, err := strconv.ParseInt(*fail.Id, 10, 64); err != nil {
 			return nil, err
 		} else {
@@ -414,13 +425,12 @@ func (s *Backend) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckDeadli
 		return nil, err
 	}
 
-	req := s.sqs.ChangeMessageVisibilityRequest(&sqs.ChangeMessageVisibilityInput{
+	_, err = s.sqs.ChangeMessageVisibilityWithContext(ctx, &sqs.ChangeMessageVisibilityInput{
 		QueueUrl:          &url,
 		ReceiptHandle:     &in.Receipt.Id,
 		VisibilityTimeout: &in.AckDeadlineSeconds,
 	})
 
-	_, err = req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
