@@ -190,7 +190,6 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 		log.Printf("Got error while querying sqs: %v", err)
 		return err
 	}
-	log.Printf("ListQueue results: Got total %v queues", count)
 
 	// Send any remaining queues not flushed
 	stream.Send(&rpc.ListQueuesResponse{
