@@ -165,25 +165,10 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 		QueueNamePrefix: &in.Namespace,
 	}
 	ctx := stream.Context()
-	count := 0
+	var queues []*string
 	err = s.sqs.ListQueuesPagesWithContext(ctx, input,
 		func(page *sqs.ListQueuesOutput, lastPage bool) bool {
-			count += len(page.QueueUrls)
-			for idx, url := range page.QueueUrls {
-				if idx != 0 && idx%100 == 0 {
-					stream.Send(&rpc.ListQueuesResponse{
-						Queues: buf,
-					})
-					buf = make([]*rpc.QueueId, 0, 100)
-				}
-
-				if queueId, err := QueueUrlToQueueId(*url); err != nil {
-					log.Printf("Got error while converting queue url: %v", err)
-					return false
-				} else if strings.Contains(queueId.Name, in.Filter) {
-					buf = append(buf, queueId)
-				}
-			}
+			queues = append(queues, page.QueueUrls...)
 			return true
 		})
 	if err != nil {
@@ -191,6 +176,21 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 		return err
 	}
 
+	for idx, url := range queues {
+		if idx != 0 && idx%100 == 0 {
+			stream.Send(&rpc.ListQueuesResponse{
+				Queues: buf,
+			})
+			buf = make([]*rpc.QueueId, 0, 100)
+		}
+
+		if queueId, err := QueueUrlToQueueId(*url); err != nil {
+			log.Printf("Got error while converting queue url: %v", err)
+			return err
+		} else if strings.Contains(queueId.Name, in.Filter) {
+			buf = append(buf, queueId)
+		}
+	}
 	// Send any remaining queues not flushed
 	stream.Send(&rpc.ListQueuesResponse{
 		Queues: buf,
@@ -230,7 +230,8 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 	queueName := QueueIdToName(in.Id)
 	attributes := make(map[string]*string)
 	for k, v := range in.Attributes {
-		attributes[k] = &v
+		value := v
+		attributes[k] = &value
 	}
 	output, err := s.sqs.CreateQueueWithContext(ctx, &sqs.CreateQueueInput{
 		QueueName:  queueName,
@@ -270,7 +271,8 @@ func (s *Backend) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueRequest) (
 
 	attributes := make(map[string]*string)
 	for k, v := range in.Attributes {
-		attributes[k] = &v
+		value := v
+		attributes[k] = &value
 	}
 	_, err = s.sqs.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
 		QueueUrl:   &url,
@@ -310,9 +312,10 @@ func (s *Backend) AckMessages(ctx context.Context, in *rpc.AckMessagesRequest) (
 	entries := make([]*sqs.DeleteMessageBatchRequestEntry, 0, len(in.Receipts))
 	for idx, receipt := range in.Receipts {
 		strIdx := strconv.Itoa(idx)
+		handle := receipt.Id
 		entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
 			Id:            &strIdx,
-			ReceiptHandle: &receipt.Id,
+			ReceiptHandle: &handle,
 		})
 	}
 
