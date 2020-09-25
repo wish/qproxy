@@ -15,7 +15,7 @@ default: build/qproxy.linux
 
 build/qproxy.linux: ${GOFILES}
 	@echo "$@"
-	@GOOS=linux CGO_ENABLED=0 go build -o build/qproxy.linux -ldflags\
+	@GOOS=linux GOARCH=$(TARGETARCH) CGO_ENABLED=0 go build -o build/qproxy.linux -ldflags\
 		"-X github.com/wish/qproxy.Version=$(VERSION)$(V_DIRTY) \
 		 -X github.com/wish/qproxy.Git=$(GIT)$(DIRTY)" \
 		github.com/wish/qproxy/cmd/qproxy
