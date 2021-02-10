@@ -96,13 +96,14 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 		attrs, err := s.GetQueue(ctx, &rpc.GetQueueRequest{Id: id})
 		if err == nil {
+			true_name := QueueIdToName(id)
 			queued, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessages"], 10, 64)
 			if err == nil {
-				s.m.Queued.WithLabelValues(id.Namespace, id.Name).Set(float64(queued))
+				s.m.Queued.WithLabelValues(id.Namespace, id.Name, *true_name).Set(float64(queued))
 			}
 			inflight, err := strconv.ParseInt(attrs.Attributes["ApproximateNumberOfMessagesNotVisible"], 10, 64)
 			if err == nil {
-				s.m.Inflight.WithLabelValues(id.Namespace, id.Name).Set(float64(inflight))
+				s.m.Inflight.WithLabelValues(id.Namespace, id.Name, *true_name).Set(float64(inflight))
 			}
 		}
 	}
