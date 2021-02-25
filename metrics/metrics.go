@@ -54,7 +54,7 @@ func NewQProxyMetrics() (QProxyMetrics, error) {
 			Namespace: "qproxy",
 			Name:      "api_errors",
 		},
-		[]string{"api", "namespace", "name"},
+		[]string{"api", "namespace", "name", "reason"},
 	)
 	if err := prometheus.Register(m.APIErrors); err != nil {
 		return m, err
