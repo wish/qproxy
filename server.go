@@ -69,7 +69,7 @@ func (s *QProxyServer) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_L
 	defer func() {
 		s.m.APILatency.WithLabelValues("ListQueues", in.Namespace, "").Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, "").Inc()
+			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, "", err.Error()).Inc()
 			log.Println("Error ListQueues: ", err)
 		}
 	}()
@@ -86,7 +86,7 @@ func (s *QProxyServer) GetQueue(ctx context.Context, in *rpc.GetQueueRequest) (r
 	defer func() {
 		s.m.APILatency.WithLabelValues("GetQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("GetQueue", in.Id.Namespace, in.Id.Name).Inc()
+			s.m.APIErrors.WithLabelValues("GetQueue", in.Id.Namespace, in.Id.Name, err.Error()).Inc()
 			log.Println("Error GetQueue: ", err)
 		}
 	}()
@@ -100,7 +100,7 @@ func (s *QProxyServer) CreateQueue(ctx context.Context, in *rpc.CreateQueueReque
 	defer func() {
 		s.m.APILatency.WithLabelValues("CreateQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("CreateQueue", in.Id.Namespace, in.Id.Name).Inc()
+			s.m.APIErrors.WithLabelValues("CreateQueue", in.Id.Namespace, in.Id.Name, err.Error()).Inc()
 			log.Println("Error CreateQueue: ", err)
 		}
 	}()
@@ -114,7 +114,7 @@ func (s *QProxyServer) DeleteQueue(ctx context.Context, in *rpc.DeleteQueueReque
 	defer func() {
 		s.m.APILatency.WithLabelValues("DeleteQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("DeleteQueue", in.Id.Namespace, in.Id.Name).Inc()
+			s.m.APIErrors.WithLabelValues("DeleteQueue", in.Id.Namespace, in.Id.Name, err.Error()).Inc()
 			log.Println("Error DeleteQueue: ", err)
 		}
 	}()
@@ -128,7 +128,7 @@ func (s *QProxyServer) ModifyQueue(ctx context.Context, in *rpc.ModifyQueueReque
 	defer func() {
 		s.m.APILatency.WithLabelValues("ModifyQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("ModifyQueue", in.Id.Namespace, in.Id.Name).Inc()
+			s.m.APIErrors.WithLabelValues("ModifyQueue", in.Id.Namespace, in.Id.Name, err.Error()).Inc()
 			log.Println("Error ModifyQueue: ", err)
 		}
 	}()
@@ -142,7 +142,7 @@ func (s *QProxyServer) PurgeQueue(ctx context.Context, in *rpc.PurgeQueueRequest
 	defer func() {
 		s.m.APILatency.WithLabelValues("PurgeQueue", in.Id.Namespace, in.Id.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("PurgeQueue", in.Id.Namespace, in.Id.Name).Inc()
+			s.m.APIErrors.WithLabelValues("PurgeQueue", in.Id.Namespace, in.Id.Name, err.Error()).Inc()
 			log.Println("Error PurgeQueue: ", err)
 		}
 	}()
@@ -156,7 +156,7 @@ func (s *QProxyServer) AckMessages(ctx context.Context, in *rpc.AckMessagesReque
 	defer func() {
 		s.m.APILatency.WithLabelValues("AckMessages", in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("AckMessages", in.QueueId.Namespace, in.QueueId.Name).Inc()
+			s.m.APIErrors.WithLabelValues("AckMessages", in.QueueId.Namespace, in.QueueId.Name, err.Error()).Inc()
 			log.Println("Error AckMessages: ", err)
 		} else {
 			s.m.Acknowledged.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Receipts) - len(resp.Failed)))
@@ -176,7 +176,7 @@ func (s *QProxyServer) GetMessages(ctx context.Context, in *rpc.GetMessagesReque
 	defer func() {
 		s.m.APILatency.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name).Inc()
+			s.m.APIErrors.WithLabelValues(apiName, in.QueueId.Namespace, in.QueueId.Name, err.Error()).Inc()
 			log.Println("Error GetMessages: ", err)
 		} else {
 			s.m.Received.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(resp.Messages)))
@@ -192,7 +192,7 @@ func (s *QProxyServer) PublishMessages(ctx context.Context, in *rpc.PublishMessa
 	defer func() {
 		s.m.APILatency.WithLabelValues("PublishMessages", in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("PublishMessages", in.QueueId.Namespace, in.QueueId.Name).Inc()
+			s.m.APIErrors.WithLabelValues("PublishMessages", in.QueueId.Namespace, in.QueueId.Name, err.Error()).Inc()
 			log.Println("Error PublishMessages: ", err)
 		} else {
 			s.m.Published.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Messages) - len(resp.Failed)))
@@ -208,7 +208,7 @@ func (s *QProxyServer) ModifyAckDeadline(ctx context.Context, in *rpc.ModifyAckD
 	defer func() {
 		s.m.APILatency.WithLabelValues("ModifyAckDeadline", in.QueueId.Namespace, in.QueueId.Name).Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("ModifyAckDeadline", in.QueueId.Namespace, in.QueueId.Name).Inc()
+			s.m.APIErrors.WithLabelValues("ModifyAckDeadline", in.QueueId.Namespace, in.QueueId.Name, err.Error()).Inc()
 			log.Println("Error ModifyAckDeadline: ", err)
 		}
 	}()
@@ -222,7 +222,7 @@ func (s *QProxyServer) Healthcheck(ctx context.Context, in *rpc.HealthcheckReque
 	defer func() {
 		s.m.APILatency.WithLabelValues("Healthcheck", "", "").Observe(float64(time.Now().Sub(start)))
 		if err != nil {
-			s.m.APIErrors.WithLabelValues("Healthcheck", "", "").Inc()
+			s.m.APIErrors.WithLabelValues("Healthcheck", "", "", err.Error()).Inc()
 			log.Println("Error Healthcheck: ", err)
 		}
 	}()
