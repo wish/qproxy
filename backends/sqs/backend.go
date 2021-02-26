@@ -19,6 +19,25 @@ import (
 	"github.com/wish/qproxy/rpc"
 )
 
+var SQSErrorCodes = []string{
+    sqs.ErrCodeBatchEntryIdsNotDistinct,
+    sqs.ErrCodeBatchRequestTooLong,
+    sqs.ErrCodeEmptyBatchRequest,
+    sqs.ErrCodeInvalidAttributeName,
+    sqs.ErrCodeInvalidBatchEntryId,
+    sqs.ErrCodeInvalidIdFormat,
+    sqs.ErrCodeInvalidMessageContents,
+    sqs.ErrCodeMessageNotInflight,
+    sqs.ErrCodeOverLimit,
+    sqs.ErrCodePurgeQueueInProgress,
+    sqs.ErrCodeQueueDeletedRecently,
+    sqs.ErrCodeQueueDoesNotExist,
+    sqs.ErrCodeQueueNameExists,
+    sqs.ErrCodeReceiptHandleIsInvalid,
+    sqs.ErrCodeTooManyEntriesInBatchRequest,
+    sqs.ErrCodeUnsupportedOperation,
+}
+
 type Backend struct {
 	// TODO: LRU Cache?
 	nameMapping *sync.Map
