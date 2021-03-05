@@ -253,6 +253,10 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 		value := v
 		attributes[k] = &value
 	}
+	if in.Id.Type == rpc.QueueId_Fifo {
+	    value := "true"
+	    attributes["FifoQueue"] = &value
+	}
 	output, err := s.sqs.CreateQueueWithContext(ctx, &sqs.CreateQueueInput{
 		QueueName:  queueName,
 		Attributes: attributes,
@@ -411,11 +415,18 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 				StringValue: &pointerVal,
 			}
 		}
-		entries = append(entries, &sqs.SendMessageBatchRequestEntry{
+		entry := &sqs.SendMessageBatchRequestEntry{
 			Id:                &strIdx,
 			MessageAttributes: attrs,
 			MessageBody:       &message.Data,
-		})
+		}
+        if in.QueueId.Type == rpc.QueueId_Fifo {
+            dedupId := "MessageGroup"
+            entry.MessageDeduplicationId = &dedupId
+            value := "MessageGroup"
+            entry.MessageGroupId = &value
+        }
+		entries = append(entries, entry)
 	}
 
 	output, err := s.sqs.SendMessageBatchWithContext(ctx, &sqs.SendMessageBatchInput{
