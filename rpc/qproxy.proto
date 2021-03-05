@@ -76,6 +76,11 @@ service QProxy {
 message QueueId {
   string Namespace = 1;
   string Name = 2;
+  enum QueueType {
+    Standard = 0;
+    Fifo = 1;
+  }
+  QueueType Type = 3;
 }
 
 message ListQueuesRequest {
