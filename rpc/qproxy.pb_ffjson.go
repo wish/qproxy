@@ -6705,6 +6705,8 @@ func (j *QueueId) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.WriteJsonString(buf, string(j.Namespace))
 	buf.WriteString(`,"Name":`)
 	fflib.WriteJsonString(buf, string(j.Name))
+	buf.WriteString(`,"Type":`)
+	fflib.FormatBits2(buf, uint64(j.Type), 10, j.Type < 0)
 	buf.WriteByte('}')
 	return nil
 }
@@ -6716,11 +6718,15 @@ const (
 	ffjtQueueIdNamespace
 
 	ffjtQueueIdName
+
+	ffjtQueueIdType
 )
 
 var ffjKeyQueueIdNamespace = []byte("Namespace")
 
 var ffjKeyQueueIdName = []byte("Name")
+
+var ffjKeyQueueIdType = []byte("Type")
 
 // UnmarshalJSON umarshall json - template of ffjson
 func (j *QueueId) UnmarshalJSON(input []byte) error {
@@ -6796,6 +6802,20 @@ mainparse:
 						goto mainparse
 					}
 
+				case 'T':
+
+					if bytes.Equal(ffjKeyQueueIdType, kn) {
+						currentKey = ffjtQueueIdType
+						state = fflib.FFParse_want_colon
+						goto mainparse
+					}
+
+				}
+
+				if fflib.SimpleLetterEqualFold(ffjKeyQueueIdType, kn) {
+					currentKey = ffjtQueueIdType
+					state = fflib.FFParse_want_colon
+					goto mainparse
 				}
 
 				if fflib.SimpleLetterEqualFold(ffjKeyQueueIdName, kn) {
@@ -6832,6 +6852,9 @@ mainparse:
 
 				case ffjtQueueIdName:
 					goto handle_Name
+
+				case ffjtQueueIdType:
+					goto handle_Type
 
 				case ffjtQueueIdnosuchkey:
 					err = fs.SkipField(tok)
@@ -6892,6 +6915,36 @@ handle_Name:
 			outBuf := fs.Output.Bytes()
 
 			j.Name = string(string(outBuf))
+
+		}
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_Type:
+
+	/* handler: j.Type type=rpc.QueueId_QueueType kind=int32 quoted=false*/
+
+	{
+		if tok != fflib.FFTok_integer && tok != fflib.FFTok_null {
+			return fs.WrapErr(fmt.Errorf("cannot unmarshal %s into Go value for QueueId_QueueType", tok))
+		}
+	}
+
+	{
+
+		if tok == fflib.FFTok_null {
+
+		} else {
+
+			tval, err := fflib.ParseInt(fs.Output.Bytes(), 10, 32)
+
+			if err != nil {
+				return fs.WrapErr(err)
+			}
+
+			j.Type = QueueId_QueueType(tval)
 
 		}
 	}
