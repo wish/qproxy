@@ -20,22 +20,22 @@ import (
 )
 
 var SQSErrorCodes = []string{
-    sqs.ErrCodeBatchEntryIdsNotDistinct,
-    sqs.ErrCodeBatchRequestTooLong,
-    sqs.ErrCodeEmptyBatchRequest,
-    sqs.ErrCodeInvalidAttributeName,
-    sqs.ErrCodeInvalidBatchEntryId,
-    sqs.ErrCodeInvalidIdFormat,
-    sqs.ErrCodeInvalidMessageContents,
-    sqs.ErrCodeMessageNotInflight,
-    sqs.ErrCodeOverLimit,
-    sqs.ErrCodePurgeQueueInProgress,
-    sqs.ErrCodeQueueDeletedRecently,
-    sqs.ErrCodeQueueDoesNotExist,
-    sqs.ErrCodeQueueNameExists,
-    sqs.ErrCodeReceiptHandleIsInvalid,
-    sqs.ErrCodeTooManyEntriesInBatchRequest,
-    sqs.ErrCodeUnsupportedOperation,
+	sqs.ErrCodeBatchEntryIdsNotDistinct,
+	sqs.ErrCodeBatchRequestTooLong,
+	sqs.ErrCodeEmptyBatchRequest,
+	sqs.ErrCodeInvalidAttributeName,
+	sqs.ErrCodeInvalidBatchEntryId,
+	sqs.ErrCodeInvalidIdFormat,
+	sqs.ErrCodeInvalidMessageContents,
+	sqs.ErrCodeMessageNotInflight,
+	sqs.ErrCodeOverLimit,
+	sqs.ErrCodePurgeQueueInProgress,
+	sqs.ErrCodeQueueDeletedRecently,
+	sqs.ErrCodeQueueDoesNotExist,
+	sqs.ErrCodeQueueNameExists,
+	sqs.ErrCodeReceiptHandleIsInvalid,
+	sqs.ErrCodeTooManyEntriesInBatchRequest,
+	sqs.ErrCodeUnsupportedOperation,
 }
 
 type Backend struct {
@@ -254,8 +254,8 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 		attributes[k] = &value
 	}
 	if in.Id.Type == rpc.QueueId_Fifo {
-	    value := "true"
-	    attributes["FifoQueue"] = &value
+		value := "true"
+		attributes["FifoQueue"] = &value
 	}
 	output, err := s.sqs.CreateQueueWithContext(ctx, &sqs.CreateQueueInput{
 		QueueName:  queueName,
@@ -420,12 +420,12 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 			MessageAttributes: attrs,
 			MessageBody:       &message.Data,
 		}
-        if in.QueueId.Type == rpc.QueueId_Fifo {
-            dedupId := creaeteMessageDedupId()
-            entry.MessageDeduplicationId = &dedupId
-            value := "MessageGroup"
-            entry.MessageGroupId = &value
-        }
+		if in.QueueId.Type == rpc.QueueId_Fifo {
+			dedupId := creaeteMessageDedupId()
+			entry.MessageDeduplicationId = &dedupId
+			value := "MessageGroup"
+			entry.MessageGroupId = &value
+		}
 		entries = append(entries, entry)
 	}
 
