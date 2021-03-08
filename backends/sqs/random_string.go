@@ -12,9 +12,9 @@ const dedupIdCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"+
 var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func creaeteMessageDedupId() string {
-  b := make([]byte, length)
+  b := make([]byte, dedupIdLength)
   for i := range b {
-    b[i] = messageDedupCharset[seededRand.Intn(len(messageDedupCharset))]
+    b[i] = dedupIdCharset[seededRand.Intn(len(dedupIdCharset))]
   }
   return string(b)
 }
