@@ -421,7 +421,7 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 			MessageBody:       &message.Data,
 		}
         if in.QueueId.Type == rpc.QueueId_Fifo {
-            dedupId := "MessageGroup"
+            dedupId := creaeteMessageDedupId()
             entry.MessageDeduplicationId = &dedupId
             value := "MessageGroup"
             entry.MessageGroupId = &value

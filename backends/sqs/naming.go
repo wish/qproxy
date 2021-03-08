@@ -26,7 +26,7 @@ func QueueUrlToQueueId(url string) (*rpc.QueueId, error) {
 	if len(name_tokens) != 2 {
 		return nil, fmt.Errorf("Malformed queue name %v", name)
 	}
-    queueType := rpc.QueueId_Standard
+	queueType := rpc.QueueId_Standard
 	if name[len(name)-5:] == ".fifo" {
 	    queueType = rpc.QueueId_Fifo
 	}
