@@ -17,7 +17,6 @@ import (
 	"github.com/wish/qproxy/gateway"
 	metrics "github.com/wish/qproxy/metrics"
 	"github.com/wish/qproxy/rpc"
-	"github.com/google/uuid"
 )
 
 var SQSErrorCodes = []string{
@@ -255,8 +254,10 @@ func (s *Backend) CreateQueue(ctx context.Context, in *rpc.CreateQueueRequest) (
 		attributes[k] = &value
 	}
 	if in.Id.Type == rpc.QueueId_Fifo {
-		value := "true"
-		attributes["FifoQueue"] = &value
+		fifoValue := "true"
+		attributes["FifoQueue"] = &fifoValue
+		dedupValue := "true"
+		attributes["ContentBasedDeduplication"] = &dedupValue
 	}
 	output, err := s.sqs.CreateQueueWithContext(ctx, &sqs.CreateQueueInput{
 		QueueName:  queueName,
@@ -422,8 +423,6 @@ func (s *Backend) PublishMessages(ctx context.Context, in *rpc.PublishMessagesRe
 			MessageBody:       &message.Data,
 		}
 		if in.QueueId.Type == rpc.QueueId_Fifo {
-			dedupId := uuid.New().String()
-			entry.MessageDeduplicationId = &dedupId
 			value := "MessageGroup"
 			entry.MessageGroupId = &value
 		}
