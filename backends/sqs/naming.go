@@ -12,7 +12,7 @@ const forwardSlash = "/"
 
 func QueueIdToName(id *rpc.QueueId) *string {
 	url := strings.Join([]string{id.Namespace, id.Name}, sepChar)
-	if id.Type == rpc.QueueId_Fifo {
+	if id.Type == rpc.QueueId_Fifo && url[len(url)-5:] != ".fifo" {
 		url = url + ".fifo"
 	}
 	return &url
