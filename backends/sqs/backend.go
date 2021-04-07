@@ -152,7 +152,7 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 }
 
 func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, error) {
-	if url, ok := s.nameMapping.Load(QueueIdToName(in)); ok {
+	if url, ok := s.nameMapping.Load(*QueueIdToName(in)); ok {
 		return url.(string), nil
 	}
 
@@ -171,7 +171,7 @@ func (s *Backend) GetQueueUrl(ctx context.Context, in *rpc.QueueId) (string, err
 }
 
 func (s *Backend) updateNameMapping(in *rpc.QueueId, url *string) {
-	s.nameMapping.Store(QueueIdToName(in), *url)
+	s.nameMapping.Store(*QueueIdToName(in), *url)
 }
 
 func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQueuesServer) (err error) {
