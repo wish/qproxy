@@ -143,7 +143,7 @@ func (s *Backend) collectMetrics(metricsNamespace string) {
 		case <-collectTicker.C:
 			wg := sync.WaitGroup{}
 			for _, queue := range queues {
-        		wg.Add(1)
+				wg.Add(1)
 				go collectFunc(queue, &wg)
 			}
 			wg.Wait()
@@ -202,7 +202,9 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 
 		if queueId, err := QueueUrlToQueueId(*url); err != nil {
 			log.Printf("Got error while converting queue url: %v", err)
-			return err
+			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, "").Inc()
+			// skip queue with malformed name
+			continue
 		} else if strings.Contains(queueId.Name, in.Filter) {
 			buf = append(buf, queueId)
 		}
