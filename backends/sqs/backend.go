@@ -202,7 +202,7 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 
 		if queueId, err := QueueUrlToQueueId(*url); err != nil {
 			log.Printf("Got error while converting queue url: %v", err)
-			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, "").Inc()
+			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, *url, "Malformed queue name").Inc()
 			// skip queue with malformed name
 			continue
 		} else if strings.Contains(queueId.Name, in.Filter) {
