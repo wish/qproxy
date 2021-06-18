@@ -201,9 +201,10 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 		}
 
 		if queueId, err := QueueUrlToQueueId(*url); err != nil {
-			log.Printf("Got error while converting queue url: %v", err)
-			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, *url, "Malformed queue name").Inc()
-			// skip queue with malformed name
+			// yiguo: new py3 backend workers are using different names, and they are not using qproxy.
+			// in that case we skip the queues when qproxy can not parse their names
+			// log.Printf("Got error while converting queue url: %v", err)
+			// s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, *url, "Malformed queue name").Inc()
 			continue
 		} else if strings.Contains(queueId.Name, in.Filter) {
 			buf = append(buf, queueId)
