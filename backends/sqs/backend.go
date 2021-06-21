@@ -19,6 +19,8 @@ import (
 	"github.com/wish/qproxy/rpc"
 )
 
+const SKIP_PREFIX = "prod-"
+
 var SQSErrorCodes = []string{
 	sqs.ErrCodeBatchEntryIdsNotDistinct,
 	sqs.ErrCodeBatchRequestTooLong,
@@ -199,11 +201,13 @@ func (s *Backend) ListQueues(in *rpc.ListQueuesRequest, stream rpc.QProxy_ListQu
 			})
 			buf = make([]*rpc.QueueId, 0, 100)
 		}
-
+		if strings.HasPrefix(*url, SKIP_PREFIX) {
+			// yiguo: new py3 backend workers are using prod-*, and they are not using qproxy.
+			continue
+		}
 		if queueId, err := QueueUrlToQueueId(*url); err != nil {
-			// yiguo: new py3 backend workers are using different names, and they are not using qproxy.
 			// in that case we skip the queues when qproxy can not parse their names
-			// s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, *url, "Malformed queue name").Inc()
+			s.m.APIErrors.WithLabelValues("ListQueues", in.Namespace, *url, "Malformed queue name").Inc()
 			log.Printf("Got error while converting queue url: %v", err)
 			continue
 		} else if strings.Contains(queueId.Name, in.Filter) {
