@@ -9,6 +9,7 @@ import (
 
 const sepChar = "_"
 const forwardSlash = "/"
+const skipPrefix = "prod-"
 
 func QueueIdToName(id *rpc.QueueId) *string {
 	url := strings.Join([]string{id.Namespace, id.Name}, sepChar)
@@ -16,6 +17,12 @@ func QueueIdToName(id *rpc.QueueId) *string {
 		url = url + ".fifo"
 	}
 	return &url
+}
+
+func SkipUrl(url string) bool {
+	tokens := strings.Split(url, forwardSlash)
+	name := tokens[len(tokens)-1]
+	return strings.HasPrefix(name, skipPrefix)
 }
 
 func QueueUrlToQueueId(url string) (*rpc.QueueId, error) {
