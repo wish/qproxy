@@ -76,7 +76,7 @@ func NewQProxyMetrics() (QProxyMetrics, error) {
 			Namespace: "qproxy",
 			Name:      "published",
 		},
-		[]string{"namespace", "name"},
+		[]string{"namespace", "name", "true_name"},
 	)
 	if err := prometheus.Register(m.Published); err != nil {
 		return m, err
