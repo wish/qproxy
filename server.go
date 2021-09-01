@@ -198,7 +198,7 @@ func (s *QProxyServer) PublishMessages(ctx context.Context, in *rpc.PublishMessa
 			s.m.APIErrors.WithLabelValues("PublishMessages", in.QueueId.Namespace, in.QueueId.Name, s.ParseError(err)).Inc()
 			log.Println("Error PublishMessages: ", err)
 		} else {
-			s.m.Published.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Messages) - len(resp.Failed)))
+			s.m.Published.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name, *sqs.QueueIdToName(in.QueueId)).Add(float64(len(in.Messages) - len(resp.Failed)))
 		}
 	}()
 	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
