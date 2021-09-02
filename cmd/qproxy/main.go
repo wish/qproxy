@@ -8,6 +8,7 @@ import (
 	"github.com/wish/qproxy/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	_ "go.uber.org/automaxprocs"
 	"log"
 	"net"
 	"net/http"
