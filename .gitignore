@@ -5,6 +5,8 @@
 *.so
 *.dylib
 cmd/qproxy/qproxy
+bin/
+build/
 
 # Test binary, build with `go test -c`
 *.test
