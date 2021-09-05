@@ -86,17 +86,17 @@ build/checksums.256: build/qproxy.linux build/qproxy.darwin
 
 $(PGG):
 	@echo "$@"
-	@go build -o $(PGG) ./vendor/github.com/golang/protobuf/protoc-gen-go
+	@GOBIN=$(CURDIR)/bin go get github.com/golang/protobuf/protoc-gen-go@v1.2.0
 
 $(FFJ):
 	@echo "$@"
-	@go build -o $(FFJ) ./vendor/github.com/pquerna/ffjson
+	@GOBIN=$(CURDIR)/bin go get github.com/pquerna/ffjson@v0.0.0-20181028064349-e517b90714f7
 
 $(PGIT):
 	@echo "$@"
-	@go build -o $(PGIT) ./vendor/github.com/favadi/protoc-go-inject-tag
+	@GOBIN=$(CURDIR)/bin go get github.com/favadi/protoc-go-inject-tag@v1.3.0
 
 $(PGGG):
 	@echo "$@"
-	@go build -o $(PGGG) ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	@GOBIN=$(CURDIR)/bin go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
