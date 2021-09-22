@@ -162,7 +162,7 @@ func (s *QProxyServer) AckMessages(ctx context.Context, in *rpc.AckMessagesReque
 			s.m.APIErrors.WithLabelValues("AckMessages", in.QueueId.Namespace, in.QueueId.Name, s.ParseError(err)).Inc()
 			log.Println("Error AckMessages: ", err)
 		} else {
-			s.m.Acknowledged.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name).Add(float64(len(in.Receipts) - len(resp.Failed)))
+			s.m.Acknowledged.WithLabelValues(in.QueueId.Namespace, in.QueueId.Name,*sqs.QueueIdToName(in.QueueId)).Add(float64(len(in.Receipts) - len(resp.Failed)))
 		}
 	}()
 	ctx = s.setContextTimeout(ctx, in.RPCTimeout)
