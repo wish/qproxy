@@ -371,7 +371,13 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 		return nil, err
 	}
 
+	var sqsAttributeNames []*string
+	if in.RequireQueueSystemAttributes {
+		sqsAttributeNames = []*string{aws.String("All")}
+	}
+
 	output, err := s.sqs.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+		AttributeNames:        sqsAttributeNames,
 		MessageAttributeNames: []*string{aws.String("All")},
 		QueueUrl:              &url,
 		WaitTimeSeconds:       &in.LongPollSeconds,
@@ -389,9 +395,17 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 		for key, valueStruct := range message.MessageAttributes {
 			attributes[key] = *valueStruct.StringValue
 		}
+
+		sqsAttributes := make(map[string]string)
+		if in.RequireQueueSystemAttributes {
+			for key, value := range message.Attributes {
+				sqsAttributes[key] = *value
+			}
+		}
 		messages = append(messages, &rpc.Message{
-			Data:       *message.Body,
-			Attributes: attributes,
+			Data:                  *message.Body,
+			Attributes:            attributes,
+			QueueSystemAttributes: sqsAttributes,
 			Receipt: &rpc.MessageReceipt{
 				Id: *message.ReceiptHandle,
 			},
