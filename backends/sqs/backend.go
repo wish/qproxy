@@ -396,8 +396,9 @@ func (s *Backend) GetMessages(ctx context.Context, in *rpc.GetMessagesRequest) (
 			attributes[key] = *valueStruct.StringValue
 		}
 
-		sqsAttributes := make(map[string]string)
+		var sqsAttributes map[string]string
 		if in.RequireQueueSystemAttributes {
+			sqsAttributes = make(map[string]string)
 			for key, value := range message.Attributes {
 				sqsAttributes[key] = *value
 			}
