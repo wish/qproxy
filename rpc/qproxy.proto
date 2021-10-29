@@ -148,7 +148,8 @@ message FailedPublish {
 
 message Message {
   string Data = 1;
-  map<string, string> Attributes = 2;  
+  map<string, string> Attributes = 2;
+  map<string, string> QueueSystemAttributes = 3;
 
   MessageReceipt Receipt = 100;
 }
@@ -170,6 +171,7 @@ message GetMessagesRequest {
   int64 LongPollSeconds = 2;
   int64 MaxMessages = 3;
   int64 AckDeadlineSeconds = 4;
+  bool RequireQueueSystemAttributes = 5;
   int64 RPCTimeout = 100;
 }
 
