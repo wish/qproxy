@@ -3,12 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/wish/qproxy"
-	"github.com/wish/qproxy/config"
-	"github.com/wish/qproxy/rpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	_ "go.uber.org/automaxprocs"
 	"log"
 	"net"
 	"net/http"
@@ -17,6 +11,14 @@ import (
 	"runtime/pprof"
 	"syscall"
 	"time"
+
+	"github.com/wish/qproxy"
+	"github.com/wish/qproxy/config"
+	"github.com/wish/qproxy/rpc"
+	_ "go.uber.org/automaxprocs"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -50,7 +52,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// GRPC server setup
-	grpcServer := grpc.NewServer()
+	keepaliveOpt := grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionAge:      conf.GrpcMaxConnectionAge,
+		MaxConnectionAgeGrace: conf.GrpcMaxConnectionAgeGrace,
+	})
+	grpcServer := grpc.NewServer(keepaliveOpt)
 	rpc.RegisterQProxyServer(grpcServer, server)
 	reflection.Register(grpcServer)
 	go func() {

@@ -32,6 +32,9 @@ type Config struct {
 
 	Profile    string `long:"profile" description:"Run a CPUProfile, output a file with this name"`
 	MemProfile string `long:"memprofile" description:"Run a MemProfile, output a file with this name"`
+
+	GrpcMaxConnectionAge      time.Duration `long:"grpc-max-connection-age" default:"300s" description:"duration a connection may exist before it will be closed by sending a GoAway."`
+	GrpcMaxConnectionAgeGrace time.Duration `long:"grpc-max-connection-age-grace" default:"50s" description:"period after MaxConnectionAge after which the connection will be forcibly closed."`
 }
 
 func ParseConfig() *Config {
